@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand:        #FF9900;
+  --color-brand-dark:   #E68A00;
+  --color-brand-light:  #FFB84D;
+  --color-pitch:        #1a1a1a;
+  --color-off-white:    #f9f5f2;
+  --color-dark-bar:     #1a1a1a;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+}
+
+html, body {
+  background: #FF9900;
+  min-height: 100vh;
+}
+
+body {
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* scrollbar sutil */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #FF9900; border-radius: 3px; }
+
+/* Text shadows para melhor contraste em fundos laranja */
+.drop-shadow-lg {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.drop-shadow-md {
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* Orange background sections */
+.bg-brand h1, .bg-brand h2, .bg-brand h3, .bg-brand h4, .bg-brand h5, .bg-brand h6 {
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.bg-brand p {
+  text-shadow: 0.5px 0.5px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Container principal com black bars */
+#__next {
+  display: flex;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+  background: white;
+}

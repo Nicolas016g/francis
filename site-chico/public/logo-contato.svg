@@ -1,0 +1,11 @@
+<svg width="400" height="120" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Texto principal FRANCIS -->
+  <text x="20" y="80" font-family="Arial, sans-serif" font-size="72" font-weight="900" fill="#FF9900" font-style="italic">
+    FRANCIS'S
+  </text>
+  
+  <!-- Texto secundário -->
+  <text x="20" y="115" font-family="Arial, sans-serif" font-size="28" font-weight="500" fill="#C9B4A8">
+    Creative Kitchen
+  </text>
+</svg>

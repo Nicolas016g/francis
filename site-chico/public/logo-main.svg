@@ -1,0 +1,34 @@
+<svg width="200" height="80" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Porco/pimenta com chama -->
+  <g transform="translate(10, 10)">
+    <!-- Chama -->
+    <path d="M 20 5 Q 18 8 18 12 Q 18 18 22 20 Q 26 18 26 12 Q 26 8 24 5 Q 23 3 22 0 Q 21 3 20 5 Z" 
+          fill="#FF9900" stroke="#000" stroke-width="1.5"/>
+    <path d="M 16 10 Q 14 14 14 18 Q 14 25 20 28 Q 26 25 26 18 Q 26 14 24 10" 
+          fill="#FF6600" stroke="#000" stroke-width="1.5"/>
+    
+    <!-- Cabeça porco -->
+    <circle cx="22" cy="35" r="10" fill="#C9B4A8" stroke="#000" stroke-width="1.5"/>
+    
+    <!-- Orelhas -->
+    <ellipse cx="16" cy="28" rx="4" ry="7" fill="#C9B4A8" stroke="#000" stroke-width="1.5"/>
+    <ellipse cx="28" cy="28" rx="4" ry="7" fill="#C9B4A8" stroke="#000" stroke-width="1.5"/>
+    
+    <!-- Olhos -->
+    <circle cx="19" cy="33" r="1.5" fill="#000"/>
+    <circle cx="25" cy="33" r="1.5" fill="#000"/>
+    
+    <!-- Focinho -->
+    <ellipse cx="22" cy="38" rx="3" ry="2" fill="#A89080" stroke="#000" stroke-width="1"/>
+    <circle cx="20.5" cy="38" r="0.5" fill="#000"/>
+    <circle cx="23.5" cy="38" r="0.5" fill="#000"/>
+  </g>
+  
+  <!-- Texto -->
+  <text x="55" y="35" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#FF9900">
+    FRANCIS'S
+  </text>
+  <text x="55" y="55" font-family="Arial, sans-serif" font-size="12" font-weight="500" fill="#1a1a1a">
+    Creative Kitchen
+  </text>
+</svg>
