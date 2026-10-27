@@ -9,6 +9,8 @@ interface Produto {
   rating: number;
   slug: string;
   tag?: string;
+  imageUrl?: string | null;
+  inStock: boolean;
   tipo: string;
 }
 

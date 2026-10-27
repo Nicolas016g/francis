@@ -1,20 +1,18 @@
 import type { Metadata } from 'next';
 import PimentasGrid from './PimentasGrid';
+import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
   title: 'Pimentas Artesanais',
   description: 'Pimentas artesanais com diferentes níveis de ardência. Caseira, Dedo de Moça, Jalapeño, Sweet Chilli Chipotle e Malagueta com Pequi.',
 };
 
-const produtos = [
-  { name: 'Pimenta Caseira', price: 'R$ 28,90', rating: 5, slug: 'pimenta-caseira', ardencia: 1 },
-  { name: 'Pimenta Dedo de Moça', price: 'R$ 28,90', rating: 5, slug: 'pimenta-dedo-de-moca', tag: 'Mais Vendida', ardencia: 2 },
-  { name: 'Pimenta Jalapeño', price: 'R$ 28,90', rating: 5, slug: 'pimenta-jalapeno', ardencia: 3 },
-  { name: 'Sweet Chilli Chipotle', price: 'R$ 28,90', rating: 5, slug: 'pimenta-sweet-chilli-chipotle', ardencia: 3 },
-  { name: 'Malagueta com Pequi', price: 'R$ 28,90', rating: 5, slug: 'pimenta-malagueta-com-pequi', tag: 'Especial', ardencia: 4 },
-];
-
-export default function Pimentas() {
+export default async function Pimentas() {
+  const products = await prisma.product.findMany({ where: { category: 'PIMENTA', active: true }, orderBy: { createdAt: 'asc' } });
+  const produtos = products.map((p) => ({
+    name: p.name, price: p.price.toString(), rating: 5, slug: p.slug, tag: p.tag ?? undefined,
+    imageUrl: p.imageUrl, inStock: p.stockQuantity > 0, ardencia: p.heatLevel ?? 1,
+  }));
   return <PimentasGrid produtos={produtos} />;
 }
 

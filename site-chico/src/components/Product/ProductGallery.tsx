@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 
 interface ProductGalleryProps {
   productName?: string;
+  imageUrl?: string | null;
 }
 
-export default function ProductGallery({ productName = 'Produto' }: ProductGalleryProps) {
+export default function ProductGallery({ productName = 'Produto', imageUrl }: ProductGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // 4 imagens do produto
@@ -39,7 +41,7 @@ export default function ProductGallery({ productName = 'Produto' }: ProductGalle
       {/* Imagem Principal */}
       <div className="relative bg-off-white h-96 flex items-center justify-center text-9xl overflow-hidden group">
         <div className="absolute inset-0 flex items-center justify-center">
-          {images[selectedImageIndex].emoji}
+          {imageUrl ? <Image src={imageUrl} alt={productName} fill className="object-contain p-8" /> : images[selectedImageIndex].emoji}
         </div>
 
         {/* Botões de Navegação */}
@@ -70,7 +72,7 @@ export default function ProductGallery({ productName = 'Produto' }: ProductGalle
 
       {/* Miniaturas */}
       <div className="flex gap-2 overflow-x-auto pb-2">
-        {images.map((image, index) => (
+            {images.map((image, index) => (
           <button
             key={image.id}
             onClick={() => handleThumbnailClick(index)}
@@ -82,7 +84,7 @@ export default function ProductGallery({ productName = 'Produto' }: ProductGalle
             aria-label={`Imagem ${index + 1}`}
             aria-current={index === selectedImageIndex}
           >
-            {image.emoji}
+            {imageUrl ? <Image src={imageUrl} alt="" fill className="object-contain p-2" /> : image.emoji}
           </button>
         ))}
       </div>

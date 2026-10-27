@@ -33,7 +33,7 @@ export const useAsync = <T,>(asyncFunction: () => Promise<T>, immediate = true) 
 };
 
 // Hook para formulários
-export const useForm = <T extends Record<string, any>>(initialValues: T) => {
+export const useForm = <T extends Record<string, unknown>>(initialValues: T) => {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<Partial<T>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof T, boolean>>>({});

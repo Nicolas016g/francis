@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s — Franci's Creative Kitchen",
     default: "Franci's Creative Kitchen — Pimentas Artesanais e Molhos",
   },
-  description: "Pimentas artesanais, molhos autorais e kits especiais. Sabor e ardência de verdade.",
+  description: "Pimentas artesanais e molhos autorais. Sabor e ardência de verdade.",
   openGraph: {
     siteName: "Franci's Creative Kitchen",
     locale: "pt_BR",

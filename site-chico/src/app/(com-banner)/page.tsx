@@ -1,16 +1,11 @@
 import Link from "next/link";
-import { ProductCard, FeaturedProductsGrid } from "@/components/Product";
+import { ProductCard } from "@/components/Product";
+import FeaturedProductsGrid from '@/components/Product/FeaturedProductsGrid';
 import { ArrowRight, Flame, Star, Truck } from "lucide-react";
-import HomeReviewSection from "@/components/HomeReviewSection";
+import { prisma } from '@/lib/prisma';
 
-const featured = [
-  { name: "Pimenta Caseira", price: "R$ 28,90", rating: 5, slug: "pimenta-caseira", tag: "Suave" },
-  { name: "Molho Ketchup Artesanal", price: "R$ 28,90", rating: 5, slug: "molho-ketchup" },
-  { name: "Pimenta Dedo de Moça", price: "R$ 28,90", rating: 5, slug: "pimenta-dedo-de-moca", tag: "Mais Vendida" },
-  { name: "Kit Hamburgada", price: "R$ 99,90", rating: 5, slug: "kit-hamburgada", tag: "Kit" },
-];
-
-export default function Home() {
+export default async function Home() {
+  const featured = await prisma.product.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' }, take: 4 });
   return (
     <>
       {/* Hero — fundo com foto: 1440 × 600 px recomendado (proporção ~2.4:1) */}
@@ -65,7 +60,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {featured.map((p) => (
-              <ProductCard key={p.slug} {...p} />
+              <ProductCard key={p.slug} name={p.name} price={`R$ ${p.price.toString().replace('.', ',')}`} rating={5} slug={p.slug} tag={p.tag ?? undefined} imageUrl={p.imageUrl} inStock={p.stockQuantity > 0} />
             ))}
           </div>
         </div>
@@ -78,8 +73,8 @@ export default function Home() {
           <p className="text-pitch/60 text-center mb-8">Mais de 500 clientes satisfeitos com nossos produtos</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { name: "Ana Paula", text: "O kit hamburgada é incrível! Uso em tudo. Entrega rápida e embalagem perfeita.", rating: 5 },
-              { name: "Ricardo M.", text: "Comprei o kit de pimentas de presente para meu pai e ele amou. Qualidade artesanal de verdade.", rating: 5 },
+              { name: "Ana Paula", text: "Os molhos são incríveis! Uso em tudo. Entrega rápida e embalagem perfeita.", rating: 5 },
+              { name: "Ricardo M.", text: "Comprei as pimentas para presente e a qualidade artesanal é de verdade.", rating: 5 },
               { name: "Fernanda T.", text: "A pimenta caseira é viciante. Já é minha terceira compra!", rating: 5 },
             ].map((d) => (
               <div key={d.name} className="bg-white p-6 border border-brand/10">
@@ -88,16 +83,13 @@ export default function Home() {
                     <Star key={i} className="w-4 h-4 fill-brand text-brand" />
                   ))}
                 </div>
-                <p className="text-pitch/80 text-sm mb-4 italic">"{d.text}"</p>
+                <p className="text-pitch/80 text-sm mb-4 italic">&quot;{d.text}&quot;</p>
                 <span className="text-sm font-semibold text-pitch">{d.name}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
-
-      {/* Deixe sua opinião */}
-      <HomeReviewSection />
 
     </>
   );

@@ -2,7 +2,6 @@
 
 import { Star, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -14,6 +13,7 @@ interface FeaturedProductProps {
   image: string;
   badge?: string;
   rating?: number;
+  inStock?: boolean;
 }
 
 export default function FeaturedProduct({
@@ -24,6 +24,7 @@ export default function FeaturedProduct({
   image,
   badge,
   rating,
+  inStock = true,
 }: FeaturedProductProps) {
   const { addToCart } = useCart();
   const { toast } = useToast();
@@ -89,8 +90,9 @@ export default function FeaturedProduct({
         {/* Botão */}
         <button
           onClick={handleAddToCart}
+          disabled={!inStock}
           aria-label={`Adicionar ${name} ao carrinho`}
-          className="w-full bg-white border-2 border-brand text-pitch font-semibold py-3 transition-all duration-300 flex items-center justify-center gap-2 group/btn hover:bg-brand hover:text-white"
+          className="w-full bg-white border-2 border-brand text-pitch font-semibold py-3 transition-all duration-300 flex items-center justify-center gap-2 group/btn hover:bg-brand hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ShoppingCart className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
           Adicionar ao Carrinho

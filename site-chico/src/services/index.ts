@@ -1,33 +1,3 @@
-// Serviço de pagamentos
-export const paymentService = {
-  async processCard(data: any) {
-    const response = await fetch('/api/payment/process', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'card', paymentData: data }),
-    });
-    return response.json();
-  },
-
-  async processPIX(pixKey: string, amount: number) {
-    const response = await fetch('/api/payment/process', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'pix', pixKey, amount }),
-    });
-    return response.json();
-  },
-
-  async generatePIXQRCode(amount: number) {
-    const response = await fetch('/api/payment/pix', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount }),
-    });
-    return response.json();
-  },
-};
-
 // Serviço de produtos
 export const productService = {
   async fetchProducts(category?: string) {
@@ -44,7 +14,7 @@ export const productService = {
 
 // Serviço de pedidos
 export const orderService = {
-  async createOrder(data: any) {
+  async createOrder(data: unknown) {
     const response = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

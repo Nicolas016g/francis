@@ -2,22 +2,38 @@
 import { useState } from 'react';
 import Link from "next/link";
 import { Flame } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
 
 export default function Cadastro() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const { login } = useAuth();
-  const router = useRouter();
+  const [error, setError] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirm) return;
-    login(name, email);
-    router.push('/');
+    setError('');
+    if (password !== confirm) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error ?? 'Não foi possível criar sua conta.');
+      setRegisteredEmail(email);
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Não foi possível criar sua conta.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -26,9 +42,16 @@ export default function Cadastro() {
         <div className="text-center mb-8">
           <Flame className="w-10 h-10 text-brand mx-auto mb-3" />
           <h1 className="text-3xl font-bold text-pitch">Crie sua conta</h1>
-          <p className="text-pitch/60 text-sm mt-2">Junte-se à comunidade Franci's</p>
+          <p className="text-pitch/60 text-sm mt-2">Junte-se à comunidade Franci&apos;s</p>
         </div>
 
+        {registeredEmail ? (
+          <div className="bg-white p-8 space-y-4 text-center">
+            <h2 className="text-xl font-bold text-pitch">Confirme seu e-mail</h2>
+            <p className="text-sm text-pitch/70">Enviamos um link de confirmação para <strong>{registeredEmail}</strong>. Confirme o endereço antes de entrar.</p>
+            <Link href="/login" className="block text-brand hover:underline text-sm">Ir para o login</Link>
+          </div>
+        ) : <>
         {/* Sign Up Form */}
         <form onSubmit={handleSubmit} className="bg-white p-8 space-y-5">
           <div>
@@ -101,8 +124,10 @@ export default function Cadastro() {
             </label>
           </div>
 
-          <button type="submit" className="w-full bg-brand hover:bg-orange-600 text-white font-semibold py-3 transition-colors">
-            Criar conta
+          {error && <p role="alert" className="bg-red-50 text-red-700 px-4 py-3 text-sm">{error}</p>}
+
+          <button type="submit" disabled={isSubmitting} className="w-full bg-brand hover:bg-orange-600 disabled:opacity-60 text-white font-semibold py-3 transition-colors">
+            {isSubmitting ? 'Criando conta...' : 'Criar conta'}
           </button>
         </form>
 
@@ -128,8 +153,9 @@ export default function Cadastro() {
 
         <p className="text-center text-xs text-pitch/50 mt-8">
           Ao continuar, você concorda com os nossos{" "}
-          <a href="#" className="text-brand hover:underline">Termos de Uso</a>.
+          <Link href="/termos" className="text-brand hover:underline">Termos de Uso</Link>.
         </p>
+        </>}
       </div>
     </div>
   );

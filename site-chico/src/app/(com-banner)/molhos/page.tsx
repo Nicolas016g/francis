@@ -1,20 +1,18 @@
 import type { Metadata } from 'next';
 import MolhosGrid from './MolhosGrid';
+import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
   title: 'Molhos Autorais',
   description: "Molhos artesanais únicos: Ketchup, Mostarda, Barbecue, Cebola Caramelizada e Relish de Pepino. Receitas autorais da Franci's Creative Kitchen.",
 };
 
-const produtos = [
-  { name: 'Ketchup Artesanal', price: 'R$ 28,90', rating: 5, slug: 'molho-ketchup', tag: 'Clássico', tipo: 'Clássico' },
-  { name: 'Mostarda Artesanal', price: 'R$ 28,90', rating: 5, slug: 'molho-mostarda', tipo: 'Clássico' },
-  { name: 'Barbecue Artesanal', price: 'R$ 28,90', rating: 5, slug: 'molho-barbecue', tag: 'Destaque', tipo: 'Defumado' },
-  { name: 'Cebola Caramelizada', price: 'R$ 28,90', rating: 5, slug: 'molho-cebola-caramelizada', tipo: 'Especial' },
-  { name: 'Relish de Pepino', price: 'R$ 28,90', rating: 5, slug: 'molho-relish-pepino', tipo: 'Especial' },
-];
-
-export default function Molhos() {
+export default async function Molhos() {
+  const products = await prisma.product.findMany({ where: { category: 'MOLHO', active: true }, orderBy: { createdAt: 'asc' } });
+  const produtos = products.map((p) => ({
+    name: p.name, price: p.price.toString(), rating: 5, slug: p.slug, tag: p.tag ?? undefined,
+    imageUrl: p.imageUrl, inStock: p.stockQuantity > 0, tipo: p.sauceType ?? 'Clássico',
+  }));
   return <MolhosGrid produtos={produtos} />;
 }
 

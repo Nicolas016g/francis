@@ -54,8 +54,6 @@ export default function HeroCarousel({
 
   if (products.length === 0) return null;
 
-  const currentProduct = products[currentIndex];
-
   return (
     <div
       className="relative w-full h-72 overflow-hidden bg-white/5 border border-white/10 group"

@@ -7,7 +7,7 @@ export interface Product {
   originalPrice?: number;
   image: string;
   slug: string;
-  category: 'pimenta' | 'molho' | 'kit';
+  category: 'pimenta' | 'molho';
   rating?: number;
   inStock: boolean;
 }

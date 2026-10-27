@@ -1,9 +1,14 @@
-'use client';
-
 import FeaturedProduct from './FeaturedProduct';
 import Link from 'next/link';
+import { prisma } from '@/lib/prisma';
 
-export default function FeaturedProductsGrid() {
+export default async function FeaturedProductsGrid() {
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: { createdAt: 'asc' },
+    take: 4,
+  });
+
   return (
     <section className="py-12 bg-brand">
       <div className="max-w-6xl mx-auto px-4">
@@ -19,8 +24,18 @@ export default function FeaturedProductsGrid() {
 
         {/* Grid de produtos - 2 colunas para imagens mais verticais */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {FEATURED_PRODUCTS.map((product) => (
-            <FeaturedProduct key={product.id} {...product} />
+          {products.map((product) => (
+            <FeaturedProduct
+              key={product.id}
+              id={product.slug}
+              name={product.name}
+              description={product.description}
+              price={Number(product.price)}
+              image={product.imageUrl ?? '/logo_principal.png'}
+              badge={product.tag ?? undefined}
+              rating={5}
+              inStock={product.stockQuantity > 0}
+            />
           ))}
         </div>
 
@@ -37,43 +52,3 @@ export default function FeaturedProductsGrid() {
     </section>
   );
 }
-
-// Produtos em destaque — atualize com seus dados reais
-const FEATURED_PRODUCTS = [
-  {
-    id: 'pimenta-dedo-de-moca',
-    name: 'Pimenta Dedo de Moça',
-    description: 'Ardência média, sabor frutado e marcante. Perfeita para conservas e molhos.',
-    price: 28.9,
-    image: '/products/dedo-de-moca.jpg',
-    badge: 'MAIS VENDIDA',
-    rating: 5,
-  },
-  {
-    id: 'molho-ketchup',
-    name: 'Ketchup Artesanal',
-    description: 'Ketchup caseiro com tomates selecionados, sabor equilibrado e textura cremosa.',
-    price: 28.9,
-    image: '/products/ketchup.jpg',
-    badge: 'DESTAQUE',
-    rating: 5,
-  },
-  {
-    id: 'kit-hamburgada',
-    name: 'Kit Hamburgada',
-    description: 'Ketchup, Mostarda, Barbeque e Relish de pepino — o kit perfeito para hambúrgueres.',
-    price: 99.9,
-    image: '/products/kit-hamburgada.jpg',
-    badge: 'KIT',
-    rating: 5,
-  },
-  {
-    id: 'pimenta-malagueta-com-pequi',
-    name: 'Malagueta com Pequi',
-    description: 'Combinação ousada do cerrado: malagueta intensa com o aroma inconfundível do pequi.',
-    price: 28.9,
-    image: '/products/malagueta-pequi.jpg',
-    badge: 'ESPECIAL',
-    rating: 5,
-  },
-];

@@ -8,9 +8,10 @@ interface Props {
   slug: string;
   name: string;
   price: number;
+  inStock: boolean;
 }
 
-export default function AddToCartSection({ slug, name, price }: Props) {
+export default function AddToCartSection({ slug, name, price, inStock }: Props) {
   const [qty, setQty] = useState(1);
   const { addToCart } = useCart();
   const { toast } = useToast();
@@ -41,9 +42,10 @@ export default function AddToCartSection({ slug, name, price }: Props) {
       </div>
       <button
         onClick={handleAdd}
-        className="flex-1 bg-brand hover:bg-brand-dark text-white font-semibold py-3 flex items-center justify-center gap-2 transition-colors"
+        disabled={!inStock}
+        className="flex-1 bg-brand hover:bg-brand-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 flex items-center justify-center gap-2 transition-colors"
       >
-        <ShoppingCart className="w-5 h-5" /> Adicionar ao Carrinho
+        <ShoppingCart className="w-5 h-5" /> {inStock ? 'Adicionar ao Carrinho' : 'Produto indisponível'}
       </button>
     </div>
   );

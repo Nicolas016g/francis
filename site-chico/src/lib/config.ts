@@ -20,6 +20,19 @@ export const config = {
     pix: {
       key: process.env.PIX_KEY,
     },
+    mercadoPago: {
+      accessToken: process.env.MP_ACCESS_TOKEN,
+      publicKey: process.env.NEXT_PUBLIC_MP_PUBLIC_KEY,
+    },
+  },
+
+  shipping: {
+    melhorEnvio: {
+      token: process.env.MELHOR_ENVIO_TOKEN,
+      sandbox: process.env.MELHOR_ENVIO_SANDBOX === 'true',
+      // CEP de origem (endereço da loja)
+      fromPostalCode: process.env.MELHOR_ENVIO_FROM_CEP || '14800000',
+    },
   },
 
   database: {
@@ -36,6 +49,12 @@ export const config = {
     instagram: 'francis.molhos',
     email: 'contato@chicomolhos.com.br',
     phone: '(16) 99636-9876',
+  },
+
+  email: {
+    apiKey: process.env.RESEND_API_KEY,
+    from: process.env.EMAIL_FROM,
+    inbox: process.env.CONTACT_EMAIL || 'contato@chicomolhos.com.br',
   },
 
   pagination: {

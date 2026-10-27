@@ -9,6 +9,8 @@ interface Produto {
   rating: number;
   slug: string;
   tag?: string;
+  imageUrl?: string | null;
+  inStock: boolean;
   ardencia: number; // 1–5
 }
 
@@ -65,8 +67,8 @@ export default function PimentasGrid({ produtos }: { produtos: Produto[] }) {
             ))}
           </div>
           <div className="mt-10 text-center">
-            <Link href="/kits" className="inline-block border-2 border-pitch text-pitch hover:bg-pitch hover:text-white font-semibold px-8 py-3 transition-colors text-sm">
-              Ver Kits com Pimentas →
+            <Link href="/molhos" className="inline-block border-2 border-pitch text-pitch hover:bg-pitch hover:text-white font-semibold px-8 py-3 transition-colors text-sm">
+              Conheça os nossos molhos →
             </Link>
           </div>
         </div>

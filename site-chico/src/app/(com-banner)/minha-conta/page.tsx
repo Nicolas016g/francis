@@ -1,13 +1,33 @@
 import type { Metadata } from 'next';
-import Link from "next/link";
 import { User, ShoppingBag, MapPin, Lock } from "lucide-react";
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { getSessionUserId, SESSION_COOKIE } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import ProfileForm from './ProfileForm';
 
 export const metadata: Metadata = {
   title: 'Minha Conta',
   description: 'Gerencie seus dados, pedidos e endereços.',
 };
 
-export default function MinhaConta() {
+export default async function MinhaConta() {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  const userId = await getSessionUserId(token);
+  if (!userId) redirect('/login?redirect=/minha-conta');
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, email: true, phone: true },
+  });
+  if (!user) redirect('/login?redirect=/minha-conta');
+
+  const orders = await prisma.order.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    include: { items: { include: { product: { select: { name: true } } } }, payment: true },
+  });
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-pitch mb-8">
@@ -41,45 +61,32 @@ export default function MinhaConta() {
         <div className="md:col-span-3">
           <div className="bg-white shadow-sm p-6">
             <h2 className="font-bold text-pitch mb-6">Dados Pessoais</h2>
-            <form className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-pitch/60 uppercase tracking-wider block mb-1">Nome</label>
-                  <input
-                    type="text"
-                    placeholder="Seu nome"
-                    className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-brand"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-pitch/60 uppercase tracking-wider block mb-1">Sobrenome</label>
-                  <input
-                    type="text"
-                    placeholder="Seu sobrenome"
-                    className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-brand"
-                  />
-                </div>
+            <ProfileForm user={user} />
+          </div>
+
+          <div className="bg-white shadow-sm p-6 mt-6">
+            <h2 className="font-bold text-pitch mb-6">Meus Pedidos</h2>
+            {orders.length === 0 ? (
+              <p className="text-sm text-pitch/60">Você ainda não possui pedidos.</p>
+            ) : (
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <article key={order.id} className="border border-gray-100 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                      <div>
+                        <p className="font-semibold text-pitch">Pedido #{order.id.slice(-8).toUpperCase()}</p>
+                        <p className="text-xs text-pitch/50">{order.createdAt.toLocaleDateString('pt-BR')}</p>
+                      </div>
+                      <span className="text-xs font-semibold uppercase text-brand">{order.status}</span>
+                    </div>
+                    <ul className="text-sm text-pitch/70 space-y-1">
+                      {order.items.map((item) => <li key={item.id}>{item.quantity}x {item.product.name}</li>)}
+                    </ul>
+                    <p className="text-sm font-bold text-pitch mt-3">Total: R$ {order.total.toString().replace('.', ',')}</p>
+                  </article>
+                ))}
               </div>
-              <div>
-                <label className="text-xs font-semibold text-pitch/60 uppercase tracking-wider block mb-1">E-mail</label>
-                <input
-                  type="email"
-                  placeholder="seu@email.com"
-                  className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-brand"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-pitch/60 uppercase tracking-wider block mb-1">Telefone / WhatsApp</label>
-                <input
-                  type="tel"
-                  placeholder="(XX) XXXXX-XXXX"
-                  className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-brand"
-                />
-              </div>
-              <button className="bg-brand hover:bg-brand-dark text-white font-semibold px-6 py-3 transition-colors">
-                Salvar Alterações
-              </button>
-            </form>
+            )}
           </div>
         </div>
       </div>

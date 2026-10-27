@@ -2,7 +2,6 @@
 export const PRODUCT_CATEGORIES = {
   PIMENTA: 'pimenta',
   MOLHO: 'molho',
-  KIT: 'kit',
 } as const;
 
 // Constantes de status de pagamento
@@ -43,7 +42,6 @@ export const ROUTES = {
   HOME: '/',
   PIMENTAS: '/pimentas',
   MOLHOS: '/molhos',
-  KITS: '/kits',
   PRODUTO: (slug: string) => `/produto/${slug}`,
   CARRINHO: '/carrinho',
   CHECKOUT: '/checkout',

@@ -12,17 +12,31 @@ export default function ReviewForm({ productSlug }: { productSlug: string }) {
   const { toast } = useToast();
   const { isLoggedIn, user } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
       toast('Selecione uma nota antes de enviar.', 'error');
       return;
     }
-    // TODO: enviar avaliação para API
-    void productSlug;
-    toast(`Obrigado, ${user?.name}! Avaliação enviada com sucesso.`);
-    setRating(0);
-    setText('');
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/products/${productSlug}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, comment: text }),
+      });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error ?? 'Não foi possível salvar a avaliação.');
+      toast(`Obrigado, ${user?.name}! Avaliação salva com sucesso.`);
+      setRating(0);
+      setText('');
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Não foi possível salvar a avaliação.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isLoggedIn) {
@@ -85,9 +99,10 @@ export default function ReviewForm({ productSlug }: { productSlug: string }) {
         />
         <button
           type="submit"
+          disabled={isSubmitting}
           className="bg-brand hover:bg-brand-dark text-white font-semibold px-6 py-2.5 text-sm transition-colors"
         >
-          Enviar Avaliação
+          {isSubmitting ? 'Enviando...' : 'Enviar Avaliação'}
         </button>
       </form>
     </div>

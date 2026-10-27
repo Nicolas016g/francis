@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 import { ShoppingCart, User, Menu, X, Search, LogOut } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
@@ -9,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 const links = [
   { href: '/pimentas', label: 'PIMENTAS' },
   { href: '/molhos', label: 'MOLHOS' },
-  { href: '/kits', label: 'KITS' },
   { href: '/sobre', label: 'SOBRE' },
   { href: '/contato', label: 'CONTATO' },
 ];

@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { Star, ShoppingCart } from 'lucide-react';
+import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -10,13 +11,15 @@ type Props = {
   rating: number;
   slug: string;
   tag?: string;
+  imageUrl?: string | null;
+  inStock?: boolean;
 };
 
 function parsePrice(s: string): number {
   return parseFloat(s.replace('R$', '').replace(',', '.').trim());
 }
 
-export default function ProductCard({ name, price, rating, slug, tag }: Props) {
+export default function ProductCard({ name, price, rating, slug, tag, imageUrl, inStock = true }: Props) {
   const { addToCart } = useCart();
   const { toast } = useToast();
 
@@ -32,6 +35,7 @@ export default function ProductCard({ name, price, rating, slug, tag }: Props) {
       <Link href={`/produto/${slug}`} className="block flex-1 flex flex-col">
         {/* Imagem placeholder */}
         <div className="bg-off-white h-52 relative flex-shrink-0">
+          {imageUrl && <Image src={imageUrl} alt={name} fill className="object-contain p-4" />}
           {tag && (
             <span className="absolute top-3 left-3 bg-brand text-white text-xs font-semibold px-2 py-1 z-10">
               {tag}
@@ -61,8 +65,9 @@ export default function ProductCard({ name, price, rating, slug, tag }: Props) {
         <span className="text-pitch font-bold text-base">{price}</span>
         <button
           onClick={handleAddToCart}
+          disabled={!inStock}
           aria-label={`Adicionar ${name} ao carrinho`}
-          className="bg-brand hover:bg-brand-dark text-white p-2 transition-colors"
+          className="bg-brand hover:bg-brand-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-2 transition-colors"
         >
           <ShoppingCart className="w-4 h-4" />
         </button>

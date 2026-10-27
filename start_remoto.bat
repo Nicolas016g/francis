@@ -5,7 +5,7 @@ title Franci's Creative Kitchen - Remote Access
 
 echo.
 echo ╔════════════════════════════════════════════════════════════════╗
-echo ║   Franci's Creative Kitchen - Sistema de Acesso Remoto        ║
+echo ║   Franci's Creative Kitchen - Sistema de Acesso Remoto         ║
 echo ╚════════════════════════════════════════════════════════════════╝
 echo.
 
@@ -34,21 +34,21 @@ REM Aguardar ngrok inicializar
 timeout /t 3 /nobreak
 
 echo.
-echo ╔════════════════════════════════════════════════════════════════╗
+echo ╔═══════════════════════════════════════════════════════════════╗
 echo ║                     ✓ Configuração Completa                   ║
-echo ╠════════════════════════════════════════════════════════════════╣
-echo ║                                                                ║
+echo ╠═══════════════════════════════════════════════════════════════╣
+echo ║                                                               ║
 echo ║  1. Aguarde a URL aparecendo na janela "ngrok_Tunnel"         ║
 echo ║  2. A URL terá este formato:                                  ║
 echo ║     https://xxxxxxxx.ngrok-free.dev                           ║
 echo ║  3. Compartilhe COM O CLIENTE (ex: Araraquara)                ║
 echo ║  4. Cliente acessa: https://xxxxxxxx.ngrok-free.dev           ║
-echo ║                                                                ║
+echo ║                                                               ║
 echo ║  ✓ Servidor local: http://localhost:3000                      ║
 echo ║  ✓ Configuração ngrok: Automática                             ║
 echo ║  ✓ HMR: Desabilitado (melhor para acesso remoto)              ║
-echo ║                                                                ║
-echo ╚════════════════════════════════════════════════════════════════╝
+echo ║                                                               ║
+echo ╚═══════════════════════════════════════════════════════════════╝
 echo.
 
 echo AGUARDANDO... Pressione qualquer tecla para ENCERRAR.

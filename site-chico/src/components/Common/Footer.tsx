@@ -30,7 +30,6 @@ export default function Footer() {
             {[
               { href: '/pimentas', label: 'Pimentas' },
               { href: '/molhos', label: 'Molhos' },
-              { href: '/kits', label: 'Kits' },
               { href: '/sobre', label: 'Sobre' },
               { href: '/contato', label: 'Contato' },
               { href: '/minha-conta', label: 'Minha Conta' },

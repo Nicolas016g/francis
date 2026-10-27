@@ -16,7 +16,7 @@ export default function Sobre() {
             />
           </div>
           <h1 className="text-4xl font-bold text-pitch mb-3">
-            Sobre a <span className="text-brand">Franci's Creative Kitchen</span>
+            Sobre a <span className="text-brand">Franci&apos;s Creative Kitchen</span>
           </h1>
           <p className="text-pitch/80 text-lg max-w-xl mx-auto">
             Uma paixão que virou negócio. Uma história feita de ardência, cuidado e muito sabor.

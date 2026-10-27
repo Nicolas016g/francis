@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from "next/link";
 import { Flame } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,13 +10,38 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const { login } = useAuth();
   const router = useRouter();
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+  const [resendMessage, setResendMessage] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setVerificationStatus(new URLSearchParams(window.location.search).get('verified'));
+  }, []);
+
+  const handleResend = async () => {
+    setResendMessage('');
+    const response = await fetch('/api/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await response.json() as { message?: string; error?: string };
+    setResendMessage(data.message ?? data.error ?? 'Confira seu e-mail.');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Extrai o nome do e-mail como nome de exibição (simplificado)
-    const name = email.split('@')[0];
-    login(name, email);
-    router.push('/');
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      router.push('/');
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Não foi possível entrar.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -25,7 +50,7 @@ export default function Login() {
         <div className="text-center mb-8">
           <Flame className="w-10 h-10 text-brand mx-auto mb-3" />
           <h1 className="text-3xl font-bold text-pitch">Bem-vindo de volta</h1>
-          <p className="text-pitch/60 text-sm mt-2">Entre na sua conta Franci's</p>
+          <p className="text-pitch/60 text-sm mt-2">Entre na sua conta Franci&apos;s</p>
         </div>
 
         {/* Login Form */}
@@ -59,13 +84,20 @@ export default function Login() {
           </div>
 
           <div className="flex justify-end">
-            <a href="/" className="text-xs text-brand hover:underline font-medium">
+            <Link href="/recuperar-senha" className="text-xs text-brand hover:underline font-medium">
               Esqueci minha senha
-            </a>
+            </Link>
           </div>
 
-          <button type="submit" className="w-full bg-brand hover:bg-orange-600 text-white font-semibold py-3 transition-colors">
-            Entrar
+          {error && <p role="alert" className="bg-red-50 text-red-700 px-4 py-3 text-sm">{error}</p>}
+          {verificationStatus === 'success' && <p role="status" className="bg-green-50 text-green-700 px-4 py-3 text-sm">E-mail confirmado. Agora você pode entrar.</p>}
+          {verificationStatus === 'expired' && <p role="alert" className="bg-red-50 text-red-700 px-4 py-3 text-sm">Este link expirou. Informe seu e-mail abaixo para receber outro.</p>}
+          {verificationStatus === 'invalid' && <p role="alert" className="bg-red-50 text-red-700 px-4 py-3 text-sm">Link de confirmação inválido.</p>}
+          {error.includes('Confirme seu e-mail') && <button type="button" onClick={handleResend} className="text-xs text-brand hover:underline">Reenviar confirmação</button>}
+          {resendMessage && <p role="status" className="text-sm text-pitch/70">{resendMessage}</p>}
+
+          <button type="submit" disabled={isSubmitting} className="w-full bg-brand hover:bg-orange-600 disabled:opacity-60 text-white font-semibold py-3 transition-colors">
+            {isSubmitting ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
