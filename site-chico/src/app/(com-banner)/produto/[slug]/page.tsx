@@ -7,6 +7,8 @@ import AddToCartSection from "./AddToCartSection";
 import ReviewForm from "./ReviewForm";
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 async function getProduct(slug: string) {
   return prisma.product.findFirst({
     where: { slug, active: true },

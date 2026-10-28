@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import PimentasGrid from './PimentasGrid';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Pimentas Artesanais',
   description: 'Pimentas artesanais com diferentes níveis de ardência. Caseira, Dedo de Moça, Jalapeño, Sweet Chilli Chipotle e Malagueta com Pequi.',
@@ -15,4 +17,3 @@ export default async function Pimentas() {
   }));
   return <PimentasGrid produtos={produtos} />;
 }
-

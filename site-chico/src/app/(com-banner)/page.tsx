@@ -4,6 +4,8 @@ import FeaturedProductsGrid from '@/components/Product/FeaturedProductsGrid';
 import { ArrowRight, Flame, Star, Truck } from "lucide-react";
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const featured = await prisma.product.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' }, take: 4 });
   return (
@@ -94,4 +96,3 @@ export default async function Home() {
     </>
   );
 }
-

@@ -12,6 +12,8 @@ O código e o ambiente local foram reavaliados em 27/10/2026. Valores secretos n
 
 O arquivo local contém credenciais configuradas, mas ainda está orientado para desenvolvimento em dois pontos: `NEXT_PUBLIC_API_URL` e `NEXTAUTH_URL` apontam para `localhost`, e `MELHOR_ENVIO_SANDBOX` está `true`. Além disso, `MP_WEBHOOK_SECRET` não está definido no ambiente local. Na Hostinger, usar as URLs públicas, `MELHOR_ENVIO_SANDBOX=false` e um segredo real para o webhook. O `CRON_SECRET` usado durante esta sessão deve ser rotacionado antes da produção, pois foi exposto no contexto operacional.
 
+O catálogo e a página inicial consultam o Prisma em runtime (`dynamic = 'force-dynamic'`), portanto o build não precisa autenticar no MySQL. O banco continua sendo obrigatório para servir catálogo, autenticação e checkout; a alimentação dos produtos pode ser feita posteriormente pelo responsável.
+
 ## Auditoria de credenciais
 
 Validação executada em 25/09/2026 sem registrar ou expor os valores secretos:

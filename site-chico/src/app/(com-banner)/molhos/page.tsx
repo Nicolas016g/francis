@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import MolhosGrid from './MolhosGrid';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Molhos Autorais',
   description: "Molhos artesanais únicos: Ketchup, Mostarda, Barbecue, Cebola Caramelizada e Relish de Pepino. Receitas autorais da Franci's Creative Kitchen.",
@@ -15,4 +17,3 @@ export default async function Molhos() {
   }));
   return <MolhosGrid produtos={produtos} />;
 }
-
