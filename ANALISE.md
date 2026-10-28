@@ -1,12 +1,16 @@
 # Análise de lançamento — Franci's Creative Kitchen
 
-> Atualizado em: 13/10/2026 — auditoria completa passo a passo
+> Atualizado em: 27/10/2026 — reavaliação para lançamento público
 
 ## Como esta auditoria foi feita
 
 Foram revisados o schema Prisma, as quatro migrations, as rotas em `src/app/api`, as páginas de catálogo/checkout/conta, o `package.json`, a navegação e as ocorrências de `TODO`, mock, kits, webhook e persistência. Também foram executados `prisma migrate status`, `npx tsc --noEmit` e `npm run build`.
 
-O resultado de credenciais externas registrado abaixo é de 25/09/2026. Não é possível confirmar pelo código se tokens foram trocados depois; entrega de e-mail, frete, pagamento e deploy precisam de teste manual nos respectivos painéis.
+O código e o ambiente local foram reavaliados em 27/10/2026. Valores secretos não são registrados neste documento. Entrega de e-mail, frete, pagamento, banco e deploy ainda precisam de teste manual no ambiente público.
+
+### Estado das variáveis de ambiente
+
+O arquivo local contém credenciais configuradas, mas ainda está orientado para desenvolvimento em dois pontos: `NEXT_PUBLIC_API_URL` e `NEXTAUTH_URL` apontam para `localhost`, e `MELHOR_ENVIO_SANDBOX` está `true`. Além disso, `MP_WEBHOOK_SECRET` não está definido no ambiente local. Na Hostinger, usar as URLs públicas, `MELHOR_ENVIO_SANDBOX=false` e um segredo real para o webhook. O `CRON_SECRET` usado durante esta sessão deve ser rotacionado antes da produção, pois foi exposto no contexto operacional.
 
 ## Auditoria de credenciais
 
@@ -16,36 +20,36 @@ Validação executada em 25/09/2026 sem registrar ou expor os valores secretos:
 |---|---|---|
 | MySQL / Prisma | ✅ HTTP/CLI válido | `.env.local` alinhado ao usuário dedicado `site_chico`; 4 migrations em dia |
 | Mercado Pago | ✅ HTTP 200 | Token aceito pelo endpoint de identidade |
-| Resend | ⚠️ chave restrita a envio | Não usar endpoint de gerenciamento; testar envio real com domínio verificado |
+| Resend | ✅ domínio verificado no painel | Falta teste de envio real com a API key configurada na Hostinger |
 | Melhor Envio Sandbox | ❌ HTTP 401 na última validação | Token inválido, expirado ou não autorizado no sandbox |
-| `EMAIL_FROM` | ✅ formato corrigido | Usa `noreply@francismolhos.com.br`; domínio precisa estar verificado no Resend |
+| `EMAIL_FROM` | ✅ domínio confirmado | Usa `noreply@francismolhos.com.br` |
 
 Os tokens de Mercado Pago, Melhor Envio e Resend apareceram em arquivos locais durante a configuração. Por segurança, devem ser rotacionados antes da produção, principalmente as credenciais que retornaram `401`. Nunca versionar `.env`, `.env.local` ou tokens. No Resend, a chave precisa ter permissão de envio e o domínio usado em `EMAIL_FROM` precisa estar verificado.
 
 ## Veredito atual
 
-O projeto tem uma base visual funcional, banco local criado com Prisma e APIs de catálogo/pedidos implementadas. O build de produção passa. A plataforma **ainda não está pronta para receber pedidos reais** porque o webhook e as integrações externas ainda não foram testados em sandbox/produção, e o rate limit ainda é local ao processo.
+O projeto tem uma base visual funcional, APIs de catálogo/pedidos, autenticação, checkout idempotente e endpoint de manutenção. O build local com Webpack passa. A plataforma **ainda não está pronta para receber pedidos reais**: o deploy precisa ser repetido com o commit atualizado, a migration de produção precisa ser aplicada, o webhook precisa de segredo/teste, o frete precisa sair do sandbox e os fluxos externos precisam ser homologados.
 
 ## Estado técnico confirmado
 
 | Área | Estado atual | Lançamento |
 |---|---|---|
 | Next.js / TypeScript | Compila com sucesso | ✅ |
-| Prisma + MySQL local | 4 migrations aplicadas; schema atualizado | ✅ local |
+| Prisma + MySQL local | 5 migrations no código; última ainda não aplicada no banco local | ⚠️ executar `prisma migrate deploy` |
 | Catálogo | 6 produtos sem kits no banco; páginas consultam Prisma | ✅ local |
 | API de produtos | Listagem, filtro, busca e detalhe por slug consultam Prisma | ✅ local |
 | Cadastro e login | Prisma + bcryptjs + cookie HttpOnly assinado; confirmação de e-mail obrigatória | ✅ local |
 | API de pedidos | Criar/listar/consultar pedidos com sessão e transação | ✅ local; validar sandbox |
 | Checkout | Pedido idempotente, estoque reservado e preferência Mercado Pago idempotente | ✅ retry seguro; validar expiração de reservas |
-| Mercado Pago | SDK, preferência, webhook e assinatura implementados | ⚠️ cadastrar/testar sandbox |
+| Mercado Pago | SDK, preferência idempotente, webhook com assinatura e conferência de valor | ⚠️ configurar `MP_WEBHOOK_SECRET`, URL e teste sandbox |
 | PIX | Endpoint bloqueado com `503`; não é oferecido | ✅ lançamento rápido |
-| Melhor Envio | Calcula usando peso/dimensões/preço do Prisma | ⚠️ validar credencial e produção |
-| Contato | Resend centralizado, validação, rate limit e logs implementados | ⚠️ confirmar credencial/domínio e envio real |
+| Melhor Envio | Calcula usando peso/dimensões/preço do Prisma | ⚠️ token local em sandbox; validar credencial de produção |
+| Contato | Resend centralizado, validação, rate limit e logs implementados | ⚠️ domínio verificado; testar API key e recebimento |
 | Avaliações de produto | POST autenticado com upsert por usuário/produto | ✅ local |
 | Avaliação da home | Formulário falso removido | ✅ |
 | Minha conta | Sessão, perfil e histórico de pedidos | ✅ local |
 | Lint | Sem erros ou avisos | ✅ |
-| Build | `npm run build` passa | ✅ |
+| Build | `npm run build` com Webpack passa localmente | ⚠️ repetir deploy Hostinger com commit atualizado |
 
 ## Banco de dados
 
@@ -62,7 +66,7 @@ A migration está aplicada e o comando `prisma migrate status` confirmou que o b
 
 ## Bloqueadores críticos
 
-### 1. Autenticação e conta — parcialmente concluído
+### 1. Autenticação e conta — código concluído; homologação pendente
 
 Cadastro, login, logout e leitura de sessão já estão implementados em `/api/auth/register`, `/api/auth/login`, `/api/auth/logout` e `/api/auth/session`. As senhas são armazenadas com `bcryptjs` e a sessão fica em cookie HttpOnly assinado. A confirmação obrigatória usa `/api/auth/verify-email` e `/api/auth/resend-verification`; recuperação usa `/api/auth/forgot-password` e `/api/auth/reset-password`. `/minha-conta` agora exige sessão no servidor. Ainda é necessário:
 
@@ -72,8 +76,8 @@ Cadastro, login, logout e leitura de sessão já estão implementados em `/api/a
 - [x] adicionar rate limiting para login e cadastro;
 - [x] salvar alterações do formulário de perfil;
 - [x] proteger a criação e consulta de pedidos pela mesma sessão;
-- [ ] exibir pedidos reais dentro de “Minha conta”;
-- [ ] gerar um `NEXTAUTH_SECRET` aleatório para produção.
+- [x] exibir pedidos reais dentro de “Minha conta”;
+- [ ] configurar e testar `NEXTAUTH_SECRET`/`NEXTAUTH_URL` no ambiente público.
 
 O envio efetivo depende de `RESEND_API_KEY`, `EMAIL_FROM` e domínio verificado no Resend. Sem essas variáveis, a conta é criada sem sessão, mas o e-mail não poderá ser entregue.
 
@@ -155,25 +159,25 @@ O checkout agora cria o pedido antes de iniciar o Mercado Pago. O servidor:
 
 **Validado no código:** home, pimentas, molhos, detalhe e frete consultam Prisma; as APIs de produtos existem.
 
-**Não concluído:** menus, sitemap, componentes mortos e página `/kits` ainda existem, embora kits tenham sido removidos do banco.
+**Validar no deploy:** domínio público usado em sitemap/robots e presença das imagens definitivas. A rota de kits foi removida do app atual.
 
 ### Passo 3 — Cadastro e login
 
 **Validado no código:** bcrypt, cookie HttpOnly assinado, confirmação, recuperação, rate limiting e perfil persistido.
 
-**Validar manualmente:** criar conta com e-mail real, confirmar, sair, entrar e recuperar senha. O envio pelo Resend e o domínio verificado não podem ser confirmados pelo build.
+**Validar manualmente:** criar conta com e-mail real, confirmar, sair, entrar e recuperar senha usando o domínio Resend já verificado.
 
 ### Passo 4 — Pedido
 
 **Validado no código:** sessão obrigatória, produtos buscados por slug, preço recalculado no servidor, estoque decrementado em transação e pedido/pagamento criados.
 
-**Tratamento implementado:** se a preferência do Mercado Pago falhar depois da criação do pedido, a API cancela o pedido, cancela o pagamento pendente e devolve o estoque em transação. Os estados posteriores continuam dependendo do webhook.
+**Tratamento implementado:** se a resposta da preferência do Mercado Pago for perdida, o pedido permanece pendente para retry idempotente. A expiração posterior é feita pelo endpoint protegido e devolve o estoque em transação.
 
 ### Passo 5 — Pagamento
 
 **Validado no código:** preferência Mercado Pago vinculada ao `orderId`.
 
-**Implementado no código:** existe `/api/payment/webhook`, com validação de assinatura em produção e atualização de `Payment`/`Order`. **Não validado externamente:** cadastrar a URL, obter `MP_WEBHOOK_SECRET` e executar o teste sandbox completo.
+**Implementado no código:** existe `/api/payment/webhook`, com validação de assinatura em produção e atualização de `Payment`/`Order`. **Pendente:** configurar `MP_WEBHOOK_SECRET`, cadastrar a URL e executar o teste sandbox completo.
 
 ### Passo 6 — Frete
 
@@ -187,7 +191,7 @@ Pedidos pendentes abandonados podem ser liberados pelo endpoint protegido `POST 
 
 ### Passo 7 — Comunicação
 
-**Implementado no código:** `/api/contact` envia pelo Resend e só retorna sucesso após a API aceitar a mensagem. **Não validado externamente:** chave de envio, domínio e recebimento real.
+**Implementado no código:** `/api/contact` envia pelo Resend e só retorna sucesso após a API aceitar a mensagem. O domínio já foi verificado no Resend; falta validar a API key e o recebimento real na aplicação publicada.
 
 **Validar manualmente:** confirmação e recuperação de senha com envio real pelo Resend.
 
@@ -205,16 +209,18 @@ O endpoint de contato aceita nome até 100 caracteres, assunto até 150, mensage
 
 ### Passo 8 — Qualidade
 
-**Validado:** build de produção e TypeScript passam.
+**Validado:** lint, TypeScript e build com Webpack passam localmente.
 
-**Validado:** lint, TypeScript e build passam. **Pendência:** há lockfile externo causando warning de raiz do Next.js e ainda existem verificações externas de credenciais a executar.
+**Pendente:** o último deploy registrado usou uma versão anterior e falhou no Turbopack; é necessário confirmar que a Hostinger recebeu o commit com `"build": "next build --webpack"`. Há manifests duplicados na raiz do repositório, por isso o diretório da aplicação deve ser `site-chico`.
 
 ## Pendências importantes antes do lançamento
 
-- Validar envio real do formulário de contato via Resend; integração já está implementada.
-- Validar manualmente a exibição de pedidos em `/minha-conta`.
-- Testar confirmação/recuperação de senha com envio real pelo Resend e domínio verificado.
-- Gerar/autorizar novo token do Melhor Envio no ambiente sandbox ou produção correspondente.
+- Validar envio real do formulário de contato via Resend na aplicação pública.
+- Testar confirmação/recuperação de senha com envio real pelo Resend.
+- Configurar `MP_WEBHOOK_SECRET` e cadastrar/testar a URL pública do webhook.
+- Aplicar as 5 migrations no banco de produção.
+- Configurar cron para `POST /api/maintenance/expire-orders?minutes=30`.
+- Gerar/autorizar token do Melhor Envio no ambiente de produção.
 - Corrigir a busca do Header, que está apenas visual.
 - Substituir imagens/emoji placeholders e preencher a história em `/sobre`.
 - Corrigir link `href="#"` nos termos do cadastro.
@@ -222,9 +228,9 @@ O endpoint de contato aceita nome até 100 caracteres, assunto até 150, mensage
 - Configurar `NEXT_PUBLIC_SITE_URL` com o domínio definitivo e revisar `sitemap.ts`/`robots.ts`.
 - Criar `og:image` e favicon definitivo.
 - Corrigir/renovar token do Melhor Envio e validar cálculo com CEP, peso e dimensões reais.
-- Gerar `NEXTAUTH_SECRET` aleatório para produção; o valor atual é previsível e não deve ser usado em produção.
+- Confirmar `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_SITE_URL` e `NEXT_PUBLIC_API_URL` no domínio público.
 - Configurar `MP_WEBHOOK_SECRET` no ambiente de produção; o modelo está em `.env.example`.
-- Definir `NEXT_PUBLIC_API_URL`/URL base para o domínio público em produção; a preferência do Mercado Pago usa essa URL nos retornos.
+- Definir URLs públicas sem `localhost`; a preferência do Mercado Pago usa a URL base nos retornos.
 - Cadastrar e testar a URL do webhook Mercado Pago em sandbox.
 - Testar liberação de estoque em rejeição, cancelamento e repetição de webhook.
 
@@ -258,9 +264,10 @@ Também há um aviso de múltiplos `package-lock.json`: o Next.js está inferind
 - [x] Proteção da API de pedidos e checkout por sessão.
 - [x] Integração de e-mail de contato; falta teste com credencial/domínio válidos.
 - [x] Lint sem erros.
-- [ ] Variáveis de produção, domínio, SSL e banco da Hostinger configurados.
+- [ ] Variáveis de produção, domínio, SSL e banco da Hostinger configurados e conferidos.
 - [ ] Teste completo em sandbox e depois teste controlado em produção.
-- [ ] Automatizar expiração e devolução de estoque de pedidos pendentes abandonados.
+- [x] Endpoint protegido para expirar pedidos pendentes abandonados.
+- [ ] Cron da Hostinger configurado e testado para chamar o endpoint.
 - [x] Endpoint protegido para expirar pedidos pendentes abandonados (`POST /api/maintenance/expire-orders`).
 
 ### Recomendado antes da divulgação
@@ -276,16 +283,17 @@ Também há um aviso de múltiplos `package-lock.json`: o Next.js está inferind
 
 ## Ordem recomendada
 
-1. Cadastrar `MP_WEBHOOK_SECRET` e testar a URL do webhook Mercado Pago em sandbox.
-2. Validar estoque real, imagens e dados no banco.
-3. Renovar/validar Melhor Envio e testar Resend.
-4. Substituir rate limit em memória por Redis se houver múltiplas instâncias.
-5. Corrigir referências visuais restantes e testar fluxo completo.
-6. Rotacionar segredos, configurar produção e publicar com monitoramento.
-7. Configurar um cron da Hostinger para chamar periodicamente:
+1. Reimplantar o commit atualizado com `next build --webpack` e diretório `site-chico`.
+2. Aplicar as 5 migrations no banco de produção.
+3. Configurar `MP_WEBHOOK_SECRET` e testar o webhook Mercado Pago.
+4. Validar estoque real, imagens, preços e dados no banco.
+5. Renovar/validar Melhor Envio em produção e testar Resend.
+6. Confirmar URLs públicas, HTTPS, login e sessão.
+7. Testar compra completa em sandbox e depois uma compra controlada.
+8. Configurar um cron da Hostinger para chamar periodicamente:
 
    ```bash
-   curl -X POST "https://seu-dominio.com.br/api/maintenance/expire-orders?minutes=30" \
+   curl -X POST "https://francismolhos.com.br/api/maintenance/expire-orders?minutes=30" \
      -H "Authorization: Bearer $CRON_SECRET"
    ```
 
