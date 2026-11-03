@@ -1,122 +1,148 @@
-# 🌶️ Chico Pimenta — E-commerce de Pimentas Artesanais
+# Franci's Creative Kitchen (Chico Pimenta) — E-commerce
 
-> Plataforma de venda de pimentas e molhos artesanais com pagamento integrado
+Loja virtual de pimentas, molhos e kits artesanais. Este documento reúne o que é necessário para uma equipe técnica **assumir e concluir** o projeto: visão geral, arquitetura, como rodar, estado atual e o que falta para o lançamento.
 
-## 📋 Documentação
+> Estado em 03/11/2026. O repositório **não contém** credenciais, dados do banco nem fotos de produtos.
 
-- **[docs/ANALISE.md](./docs/ANALISE.md)** — Análise de prontidão e checklist de lançamento
-- **[docs/SISTEMA_LOGIN_CADASTRO.md](./docs/SISTEMA_LOGIN_CADASTRO.md)** — Login e cadastro
+## 1. Visão geral
 
-## 🗂️ Organização do repositório
+| Item | Detalhe |
+|---|---|
+| Aplicação | `site-chico/` (Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4) |
+| Banco | MySQL 8 via Prisma 6 (`site-chico/prisma`) |
+| Autenticação | Própria: cadastro, login, verificação de e-mail, recuperação de senha; sessão em cookie HttpOnly assinado (`jose`) |
+| Pagamento | Mercado Pago Checkout Pro + webhook (PIX direto está desativado) |
+| Frete | Melhor Envio (cotação assinada, válida por 15 min) |
+| E-mail | Resend (verificação, recuperação de senha, contato) |
+| Hospedagem prevista | Hostinger (Node.js) |
+| Contato do negócio | WhatsApp (16) 99636-9876 · Instagram @francis.molhos · contato@chicomolhos.com.br |
 
-- `site-chico/` — aplicação Next.js (código, Prisma, assets públicos)
-- `docs/` — documentação
-- `scripts/` — utilitários (`start_remoto.bat`, `remove_background.py`)
-- `assets/logos/` — logos originais
+### Estrutura do repositório
 
-## 🚀 Quick Start
+```
+├── site-chico/          Aplicação Next.js
+│   ├── prisma/          schema.prisma, migrations, seed-products.sql
+│   ├── public/          Logos e ícones (sem fotos de produtos)
+│   └── src/
+│       ├── app/         Rotas: páginas, /api, /admin, checkout
+│       ├── components/  Common, Product, Payment…
+│       ├── lib/         Regras de negócio (auth, stock, shipping-quote, email…)
+│       └── …            contexts, hooks, services, types, utils
+├── scripts/             Utilitários locais (start_remoto.bat, remove_background.py)
+├── assets/logos/        Logos originais da marca
+└── README.md            Este documento
+```
 
-### 1. Clonar e instalar
+### Páginas e rotas principais
+
+- **Loja:** `/`, `/pimentas`, `/molhos`, `/kits`, `/produto/[slug]`, `/busca`, `/carrinho`, `/checkout` (+ `/sucesso`, `/pendente`, `/falha`), `/minha-conta`, `/login`, `/cadastro`, `/recuperar-senha`, `/sobre`, `/contato`, `/termos`, `/privacidade`.
+- **Painel administrativo (`/admin`):** dashboard, produtos (criar/editar/ocultar), estoque (entrada, saída, perda, contagem, com histórico), pedidos (envio, rastreio, entrega). Acesso só para `role = ADMIN` com e-mail verificado; as demais pessoas recebem 404.
+- **API:** `src/app/api/` — `auth/*`, `products`, `orders`, `shipping/calculate`, `payment/mercadopago`, `payment/webhook`, `contact`, `maintenance/expire-orders`.
+
+### Modelo de dados (Prisma)
+
+`User` (com `role` CUSTOMER/ADMIN), `EmailVerificationToken`, `PasswordResetToken`, `Product` (categorias PIMENTA, MOLHO, KIT; peso e dimensões usados no frete), `Order`, `OrderItem`, `Payment`, `Review`, `StockMovement` (histórico auditável de estoque), `ProductKitItemsArchive` (vazia).
+
+## 2. Como rodar localmente
+
+Requisitos: Node.js 20+, MySQL 8.
 
 ```bash
 cd site-chico
 npm install
-```
-
-### 2. Configurar ambiente
-
-```bash
-cp .env.example .env
-# Preencha as variáveis (banco MySQL 8, Mercado Pago, Melhor Envio, Resend, segredos)
-```
-
-### 3. Banco de dados
-
-```bash
-npx prisma migrate deploy   # aplica as migrations em um MySQL vazio
+cp .env.example .env        # preencha as variáveis (seção 3)
+npx prisma migrate deploy   # aplica as migrations em um banco vazio
 npx prisma generate
+npm run dev                 # http://localhost:3000
 ```
 
-O repositório **não** contém dados nem credenciais. `prisma/seed-products.sql` traz o catálogo inicial (sem fotos e sem estoque); revise preços e composição antes de usar.
+Outros comandos: `npm run lint`, `npx tsc --noEmit --incremental false`, `npm run build`, `npm start`.
 
-### 4. Rodar localmente
+Catálogo inicial: `site-chico/prisma/seed-products.sql` (6 produtos e 3 kits, **sem fotos e com estoque zero**). Revise preços e composição com o cliente antes de usar.
 
-```bash
-npm run dev
-# Abrir http://localhost:3000
-```
+### Criar o primeiro administrador
 
-### 5. Painel administrativo
-
-`/admin` (produtos, estoque, pedidos) exige usuário com `role = ADMIN` e e-mail verificado. Crie a conta no site e promova-a:
+Crie a conta pelo site, verifique o e-mail e promova:
 
 ```sql
 UPDATE User SET role = 'ADMIN' WHERE email = 'email@do-dono.com';
 ```
 
-As fotos dos produtos não estão no repositório: informe o link da imagem em cada produto no painel (ou adicione arquivos em `site-chico/public/` e use o caminho em `imageUrl`).
+Não há tela para promover administradores (decisão de segurança).
 
-### Pendências para o lançamento
+## 3. Variáveis de ambiente
 
-Veja o checklist completo em [docs/ANALISE.md](./docs/ANALISE.md).
+Modelo completo em `site-chico/.env.example`. **Nunca versionar o `.env`.**
 
-## 📦 Stack
+| Variável | Uso |
+|---|---|
+| `DATABASE_URL` | Conexão MySQL |
+| `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` | URLs públicas (HTTPS em produção) |
+| `NEXTAUTH_SECRET` | Segredo de assinatura de sessão e cotações (forte e aleatório) |
+| `CRON_SECRET` | Autoriza `POST /api/maintenance/expire-orders` |
+| `MP_ACCESS_TOKEN`, `NEXT_PUBLIC_MP_PUBLIC_KEY`, `MP_WEBHOOK_SECRET` | Mercado Pago |
+| `PIX_KEY` | Chave PIX do negócio |
+| `MELHOR_ENVIO_TOKEN`, `MELHOR_ENVIO_FROM_CEP`, `MELHOR_ENVIO_SANDBOX` | Frete (`true` = sandbox) |
+| `RESEND_API_KEY`, `EMAIL_FROM`, `CONTACT_EMAIL` | E-mail |
 
-- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4
-- **Backend:** Next.js API Routes, Prisma ORM, MySQL
-- **Pagamento:** Mercado Pago, PIX, Cartão de Crédito
-- **Auth:** NextAuth.js
+## 4. Regras de negócio importantes
 
-## 📁 Estrutura
+- **Pedido:** exige conta logada. O preço vem do banco (nunca do navegador). O estoque é validado e **reservado em transação**; cada reserva/liberação é registrada em `StockMovement`.
+- **Frete:** calculado por CEP, peso e dimensões de cada produto. O cliente escolhe a opção; a cotação é assinada e vale 15 minutos. Peso e medidas corretos nos produtos são essenciais.
+- **Pagamento:** o pedido é criado antes; a preferência do Mercado Pago usa chave de idempotência. O **webhook** é a fonte da verdade (confere o valor); as páginas de retorno são só informativas. Aprovado → pedido confirmado; recusado/cancelado → estoque liberado.
+- **Expiração:** `POST /api/maintenance/expire-orders` (header com `CRON_SECRET`) cancela pedidos pendentes antigos e devolve o estoque; precisa de um cron externo.
+- **Limitador de requisições:** em memória do processo; não é compartilhado entre instâncias.
 
-```
-site-chico/
-├── src/
-│   ├── app/              # Rotas (Next.js App Router)
-│   ├── components/       # Componentes React (Common, Product, Payment)
-│   ├── lib/              # Configuração e helpers
-│   ├── types/            # Types TypeScript
-│   ├── constants/        # Constantes
-│   ├── utils/            # Funções auxiliares
-│   ├── services/         # API clients
-│   └── hooks/            # Custom hooks
-├── public/               # Arquivos estáticos
-└── prisma/               # Schema do banco
-```
+## 5. Estado atual (o que já foi verificado)
 
-## 🎯 Features Principais
+- Lint, TypeScript e build passam; migrations (8) aplicadas no banco de desenvolvimento/produção atual.
+- Cotação real no Melhor Envio testada em modo produção (HTTP 200 com PAC, SEDEX, Jadlog, Loggi e outros).
+- Resend: a chave de API é válida; o envio com o `EMAIL_FROM` atual **falha** (ver pendências).
+- Fluxo de compra completo e painel `/admin` **não foram testados de ponta a ponta** com pagamento real.
 
-- ✅ Catálogo de produtos (pimentas, molhos, kits)
-- ✅ Carrinho de compras
-- ✅ Checkout com 3 métodos de pagamento
-  - 💳 Cartão de crédito/débito
-  - 📲 PIX
-  - 💰 Mercado Pago
-- ✅ Autenticação própria (cadastro, login, verificação de e-mail, recuperação de senha)
-- ✅ Área do cliente (`/minha-conta`) com status e rastreio
-- ✅ Frete por Melhor Envio e e-mails via Resend
-- ✅ Painel administrativo (`/admin`) com histórico de estoque
+## 6. O que falta para lançar
 
-## 🔧 Variáveis de Ambiente
+Marque cada item apenas após confirmar no ambiente indicado.
 
-Todas estão documentadas em [`site-chico/.env.example`](./site-chico/.env.example).
+### 6.1 Bloqueadores
 
-## 🚢 Deploy
+- [ ] **E-mail:** verificar um domínio próprio no Resend (DNS) e definir `EMAIL_FROM` com endereço desse domínio (ex.: `contato@chicomolhos.com.br`). Hoje o remetente é `@gmail.com`, recusado com 403; sem isso, verificação de conta, recuperação de senha e contato não funcionam.
+- [ ] **Pagamento:** obter com o cliente os dados da conta Mercado Pago e configurar `MP_ACCESS_TOKEN`, chave pública e `MP_WEBHOOK_SECRET`; cadastrar a URL do webhook; testar em sandbox aprovado, recusado, cancelado e notificações repetidas.
+- [ ] **Ambiente de homologação:** não existe. O banco atual é de produção. Criar banco e credenciais sandbox separados antes de qualquer compra de teste.
+- [ ] **Catálogo real:** nomes, descrições, preços, **fotos**, peso, dimensões e estoque. Hoje há 6 produtos com estoque zero e nenhum kit.
+- [ ] **Kits:** a composição de cada kit não é armazenada (a coluna `kitItems` foi removida em 16/09/2026 e não é recuperável). Definir a composição com o cliente, possivelmente modelando os itens do kit no schema.
+- [ ] **Backup:** configurar backup externo/off-site do MySQL e **testar a restauração** em banco separado. Identificar o provedor do banco e habilitar snapshots/PITR. Opções: backup gerenciado do provedor; `mysqldump` agendado para S3/Backblaze B2/Cloudflare R2, criptografado e com credencial de mínimo privilégio; exportação manual apenas como paliativo.
+- [ ] **Deploy:** definir `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` (HTTPS), `NEXTAUTH_SECRET` forte; conferir domínio, DNS, certificado e URLs de retorno do Mercado Pago.
+- [ ] **Cron:** configurar `CRON_SECRET` e agendar chamada autenticada a `/api/maintenance/expire-orders`; verificar cancelamento e devolução de estoque.
+- [ ] **Compra controlada em produção** (ciclo completo: pagamento, webhook, status, frete, estoque) antes de divulgar.
 
-Deploy em hospedagem com suporte a Node.js (ex.: Hostinger). Configure as variáveis de ambiente no painel da hospedagem:
+### 6.2 Funcionalidades a concluir
 
-```bash
-npm run build
-npm start
-```
+- [ ] E-mails transacionais de pedido, pagamento e envio (hoje não existem; o site não deve prometê-los).
+- [ ] Recuperação do carrinho após falha/cancelamento no pagamento (o carrinho é limpo ao redirecionar) e nova tentativa sem reservas duplicadas.
+- [ ] Procedimento e tratamento de estorno e chargeback após pedido confirmado.
+- [ ] Upload de fotos de produtos no painel (hoje só link em `imageUrl`; depende do armazenamento da hospedagem).
+- [ ] Limitador de requisições distribuído (ex.: Redis) se houver várias instâncias.
+- [ ] Monitoramento de erros e responsável por incidentes.
+- [ ] Revisar a lógica de itens de kit e estoque de kits (hoje têm estoque próprio, independente dos itens).
 
-## 📞 Contato
+### 6.3 Conteúdo e jurídico
 
-- **WhatsApp:** (16) 99636-9876
-- **Instagram:** @francis.molhos
-- **Email:** contato@chicomolhos.com.br
+- [ ] Confirmar história e foto da página `/sobre`.
+- [ ] Confirmar imagem Open Graph e favicon com a marca.
+- [ ] Revisar Termos de Uso e Política de Privacidade (LGPD) com o responsável.
+- [ ] Testar responsividade e acessibilidade nas páginas principais.
 
----
+## 7. Segurança e boas práticas
 
-**Desenvolvedor:** Junior Dev  
-**Última atualização:** 28/03/2026
+- Credenciais anteriores já circularam em conversas e arquivos locais: **trocar** senha do banco, `NEXTAUTH_SECRET`, `CRON_SECRET` e tokens (Mercado Pago, Melhor Envio, Resend) antes do lançamento.
+- Senha do banco atual é fraca para produção.
+- O banco atual é de produção e acessível por usuário sem permissão de criar bancos; testes de restore exigem banco separado.
+- Todas as ações do `/admin` revalidam o papel do usuário no servidor.
+- O histórico do git contém fotos de produtos antigas; se o repositório for público e isso for um problema, reescrever o histórico.
+
+## 8. Observações operacionais
+
+- `scripts/start_remoto.bat` sobe o servidor local com ngrok para demonstração ao cliente; contém caminho absoluto da máquina original.
+- `scripts/remove_background.py` processa logos (Pillow); também usa caminho absoluto.
+- Next 16: `params` e `searchParams` são Promises; o build usa `--webpack`.
