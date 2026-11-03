@@ -93,12 +93,12 @@ Modelo completo em `site-chico/.env.example`. **Nunca versionar o `.env`.**
 - **Expiração:** `POST /api/maintenance/expire-orders` (header com `CRON_SECRET`) cancela pedidos pendentes antigos e devolve o estoque; precisa de um cron externo.
 - **Limitador de requisições:** em memória do processo; não é compartilhado entre instâncias.
 
-## 5. Estado atual (o que já foi verificado)
+## 5. Estado atual
 
-- Lint, TypeScript e build passam; migrations (8) aplicadas no banco de desenvolvimento/produção atual.
-- Cotação real no Melhor Envio testada em modo produção (HTTP 200 com PAC, SEDEX, Jadlog, Loggi e outros).
-- Resend: a chave de API é válida; o envio com o `EMAIL_FROM` atual **falha** (ver pendências).
-- Fluxo de compra completo e painel `/admin` **não foram testados de ponta a ponta** com pagamento real.
+- Lint, TypeScript e build passam. O schema tem 8 migrations; um banco novo precisa de `npx prisma migrate deploy`.
+- Integrações implementadas no código: Mercado Pago (Checkout Pro e webhook), Melhor Envio (cotação de frete) e Resend (e-mails de conta e contato). **Nenhuma foi homologada pela equipe que vai assumir**: cada uma precisa ser validada com credenciais próprias.
+- O fluxo de compra completo e o painel `/admin` não foram testados de ponta a ponta com pagamento real.
+- Não há ambiente de homologação definido.
 
 ## 6. O que falta para lançar
 
@@ -106,15 +106,16 @@ Marque cada item apenas após confirmar no ambiente indicado.
 
 ### 6.1 Bloqueadores
 
-- [ ] **E-mail:** verificar um domínio próprio no Resend (DNS) e definir `EMAIL_FROM` com endereço desse domínio (ex.: `contato@chicomolhos.com.br`). Hoje o remetente é `@gmail.com`, recusado com 403; sem isso, verificação de conta, recuperação de senha e contato não funcionam.
-- [ ] **Pagamento:** obter com o cliente os dados da conta Mercado Pago e configurar `MP_ACCESS_TOKEN`, chave pública e `MP_WEBHOOK_SECRET`; cadastrar a URL do webhook; testar em sandbox aprovado, recusado, cancelado e notificações repetidas.
-- [ ] **Ambiente de homologação:** não existe. O banco atual é de produção. Criar banco e credenciais sandbox separados antes de qualquer compra de teste.
-- [ ] **Catálogo real:** nomes, descrições, preços, **fotos**, peso, dimensões e estoque. Hoje há 6 produtos com estoque zero e nenhum kit.
-- [ ] **Kits:** a composição de cada kit não é armazenada (a coluna `kitItems` foi removida em 16/09/2026 e não é recuperável). Definir a composição com o cliente, possivelmente modelando os itens do kit no schema.
-- [ ] **Backup:** configurar backup externo/off-site do MySQL e **testar a restauração** em banco separado. Identificar o provedor do banco e habilitar snapshots/PITR. Opções: backup gerenciado do provedor; `mysqldump` agendado para S3/Backblaze B2/Cloudflare R2, criptografado e com credencial de mínimo privilégio; exportação manual apenas como paliativo.
-- [ ] **Deploy:** definir `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` (HTTPS), `NEXTAUTH_SECRET` forte; conferir domínio, DNS, certificado e URLs de retorno do Mercado Pago.
-- [ ] **Cron:** configurar `CRON_SECRET` e agendar chamada autenticada a `/api/maintenance/expire-orders`; verificar cancelamento e devolução de estoque.
-- [ ] **Compra controlada em produção** (ciclo completo: pagamento, webhook, status, frete, estoque) antes de divulgar.
+- [ ] **Ambiente de homologação:** criar banco, credenciais sandbox e deploy separados da produção; nenhuma compra de teste deve ser feita em produção.
+- [ ] **E-mail:** verificar um domínio no Resend (DNS) e definir `EMAIL_FROM` com endereço desse domínio (ex.: `contato@chicomolhos.com.br`). O Resend não envia a partir de provedores públicos como `@gmail.com`. Testar verificação de conta, recuperação de senha e contato.
+- [ ] **Frete:** validar a cotação do Melhor Envio em sandbox e depois em produção (token, CEP de origem, serviços e prazos) e conferir peso e medidas de cada produto.
+- [ ] **Pagamento:** obter com o cliente os dados da conta Mercado Pago e configurar `MP_ACCESS_TOKEN`, chave pública e `MP_WEBHOOK_SECRET`; cadastrar a URL do webhook; testar em sandbox pagamento aprovado, recusado, cancelado e notificações repetidas.
+- [ ] **Catálogo real:** nomes, descrições, preços, **fotos**, peso, dimensões e estoque. O seed traz 6 produtos e 3 kits com estoque zero e sem fotos.
+- [ ] **Kits:** o schema não armazena a composição de cada kit. Definir a composição com o cliente e modelar os itens do kit.
+- [ ] **Backup:** configurar backup externo/off-site do MySQL e **testar a restauração** em banco separado. Habilitar snapshots/PITR no provedor. Opções: backup gerenciado do provedor; `mysqldump` agendado para S3/Backblaze B2/Cloudflare R2, criptografado e com credencial de mínimo privilégio; exportação manual apenas como paliativo.
+- [ ] **Deploy:** definir `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` (HTTPS) e segredos fortes; conferir domínio, DNS, certificado e URLs de retorno do Mercado Pago.
+- [ ] **Cron:** agendar chamada autenticada a `/api/maintenance/expire-orders` e verificar cancelamento e devolução de estoque.
+- [ ] **Compra controlada em produção** (pagamento, webhook, status, frete, estoque) antes de divulgar.
 
 ### 6.2 Funcionalidades a concluir
 
@@ -135,9 +136,8 @@ Marque cada item apenas após confirmar no ambiente indicado.
 
 ## 7. Segurança e boas práticas
 
-- Credenciais anteriores já circularam em conversas e arquivos locais: **trocar** senha do banco, `NEXTAUTH_SECRET`, `CRON_SECRET` e tokens (Mercado Pago, Melhor Envio, Resend) antes do lançamento.
-- Senha do banco atual é fraca para produção.
-- O banco atual é de produção e acessível por usuário sem permissão de criar bancos; testes de restore exigem banco separado.
+- Gere `NEXTAUTH_SECRET` e `CRON_SECRET` novos e aleatórios (mínimo de 32 caracteres) para cada ambiente e use credenciais distintas em homologação e produção.
+- Use um usuário de banco com privilégios mínimos e senha forte.
 - Todas as ações do `/admin` revalidam o papel do usuário no servidor.
 - O histórico do git contém fotos de produtos antigas; se o repositório for público e isso for um problema, reescrever o histórico.
 
