@@ -10,7 +10,7 @@ Loja virtual de pimentas, molhos e kits artesanais. Este documento reúne o que 
 |---|---|
 | Aplicação | `site-chico/` (Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4) |
 | Banco | MySQL 8 via Prisma 6 (`site-chico/prisma`) |
-| Autenticação | Própria: cadastro, login, verificação de e-mail, recuperação de senha; sessão em cookie HttpOnly assinado (`jose`) |
+| Autenticação | Própria: cadastro, login, verificação de e-mail, recuperação de senha; sessão em cookie HttpOnly assinado (`jose`, cookie `francis_session`) |
 | Pagamento | Mercado Pago Checkout Pro + webhook (PIX direto está desativado) |
 | Frete | Melhor Envio (cotação assinada, válida por 15 min) |
 | E-mail | Resend (verificação, recuperação de senha, contato) |
@@ -35,9 +35,9 @@ Loja virtual de pimentas, molhos e kits artesanais. Este documento reúne o que 
 
 ### Páginas e rotas principais
 
-- **Loja:** `/`, `/pimentas`, `/molhos`, `/kits`, `/produto/[slug]`, `/busca`, `/carrinho`, `/checkout` (+ `/sucesso`, `/pendente`, `/falha`), `/minha-conta`, `/login`, `/cadastro`, `/recuperar-senha`, `/sobre`, `/contato`, `/termos`, `/privacidade`.
+- **Loja:** `/`, `/pimentas`, `/molhos`, `/kits`, `/produto/[slug]` (com avaliações), `/busca`, `/carrinho`, `/checkout` (+ `/sucesso`, `/pendente`, `/falha`), `/minha-conta`, `/login`, `/cadastro`, `/recuperar-senha`, `/sobre`, `/contato`, `/termos`, `/privacidade`. Há também `sitemap.xml`, `robots.txt` (bloqueia `/admin`) e imagem Open Graph gerada.
 - **Painel administrativo (`/admin`):** dashboard, produtos (criar/editar/ocultar), estoque (entrada, saída, perda, contagem, com histórico), pedidos (envio, rastreio, entrega). Acesso só para `role = ADMIN` com e-mail verificado; as demais pessoas recebem 404.
-- **API:** `src/app/api/` — `auth/*`, `products`, `orders`, `shipping/calculate`, `payment/mercadopago`, `payment/webhook`, `contact`, `maintenance/expire-orders`.
+- **API:** `src/app/api/` — `auth/*`, `account/profile` (editar nome, e-mail e telefone), `products` (+ `[slug]` e `[slug]/reviews`), `orders` (+ `[id]`), `shipping/calculate`, `payment/mercadopago`, `payment/webhook`, `payment/pix` (retorna 503, desativado), `contact`, `maintenance/expire-orders`.
 
 ### Modelo de dados (Prisma)
 
@@ -78,8 +78,8 @@ Modelo completo em `site-chico/.env.example`. **Nunca versionar o `.env`.**
 |---|---|
 | `DATABASE_URL` | Conexão MySQL |
 | `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` | URLs públicas (HTTPS em produção) |
-| `NEXTAUTH_SECRET` | Segredo de assinatura de sessão e cotações (forte e aleatório) |
-| `CRON_SECRET` | Autoriza `POST /api/maintenance/expire-orders` |
+| `NEXTAUTH_SECRET` | Assina a sessão e as cotações de frete; **mínimo de 32 caracteres** (a aplicação lança erro se for menor). O nome é herdado: a biblioteca NextAuth **não** é usada |
+| `CRON_SECRET` | Autoriza `POST /api/maintenance/expire-orders` (header `Authorization: Bearer <segredo>` ou `x-cron-secret`); **mínimo de 32 caracteres** |
 | `MP_ACCESS_TOKEN`, `NEXT_PUBLIC_MP_PUBLIC_KEY`, `MP_WEBHOOK_SECRET` | Mercado Pago |
 | `PIX_KEY` | Chave PIX do negócio |
 | `MELHOR_ENVIO_TOKEN`, `MELHOR_ENVIO_FROM_CEP`, `MELHOR_ENVIO_SANDBOX` | Frete (`true` = sandbox) |
