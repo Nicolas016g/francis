@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const links = [
   { href: '/pimentas', label: 'PIMENTAS' },
   { href: '/molhos', label: 'MOLHOS' },
+  { href: '/kits', label: 'KITS' },
   { href: '/sobre', label: 'SOBRE' },
   { href: '/contato', label: 'CONTATO' },
 ];
@@ -23,16 +24,21 @@ export default function Header() {
       <div className="bg-pitch border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-6">
           {/* Barra de pesquisa - esquerda */}
-          <div className="flex items-center bg-white w-full max-w-xs">
+          <form action="/busca" method="GET" role="search" className="flex items-center bg-white w-full max-w-xs">
+            <label htmlFor="header-search" className="sr-only">Buscar produtos</label>
             <input
-              type="text"
+              id="header-search"
+              name="q"
+              type="search"
               placeholder="Buscar..."
+              maxLength={100}
+              required
               className="flex-1 px-4 py-2 text-pitch placeholder-gray-400 focus:outline-none bg-white text-sm font-medium"
             />
-            <button className="px-4 py-2 text-pitch hover:bg-gray-100 transition">
+            <button type="submit" aria-label="Buscar produtos" className="px-4 py-2 text-pitch hover:bg-gray-100 transition">
               <Search className="w-4 h-4" />
             </button>
-          </div>
+          </form>
 
           {/* Menu de navegação - centro desktop */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-bold flex-1 justify-center">

@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS `ProductKitItemsArchive` (
+  `productId` VARCHAR(191) NOT NULL,
+  `kitItems` JSON NOT NULL,
+  `archivedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`productId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 const links = [
   { href: '/pimentas', label: 'Pimentas' },
   { href: '/molhos', label: 'Molhos' },
+  { href: '/kits', label: 'Kits' },
   { href: '/sobre', label: 'Sobre' },
   { href: '/contato', label: 'Contato' },
 ];

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-import { Header, Footer, WhatsAppButton, LayoutWrapper } from "@/components/Common";
+import { SiteChrome } from "@/components/Common";
 import { CartProvider } from "@/contexts/CartContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://franciscreativekitchen.com.br"),
   title: {
     template: "%s — Franci's Creative Kitchen",
     default: "Franci's Creative Kitchen — Pimentas Artesanais e Molhos",
@@ -28,12 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
         <CartProvider>
           <ToastProvider>
-            <LayoutWrapper>
-              <Header />
-              <main className="flex-1 min-h-screen">{children}</main>
-              <Footer />
-            </LayoutWrapper>
-            <WhatsAppButton />
+            <SiteChrome>{children}</SiteChrome>
           </ToastProvider>
         </CartProvider>
         </AuthProvider>

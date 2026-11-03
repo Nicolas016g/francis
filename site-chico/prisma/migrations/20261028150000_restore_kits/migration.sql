@@ -1,0 +1,2 @@
+ALTER TABLE `Product`
+  MODIFY `category` ENUM('PIMENTA', 'MOLHO', 'KIT') NOT NULL;

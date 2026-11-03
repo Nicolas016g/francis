@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { PaymentStatus } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { applyStockChange } from '@/lib/stock';
 
 interface MercadoPagoPayment {
   id: number;
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
     } else if (nextStatus === PaymentStatus.REJECTED || nextStatus === PaymentStatus.CANCELLED) {
       await tx.order.update({ where: { id: order.id }, data: { status: 'CANCELLED' } });
       for (const item of order.items) {
-        await tx.product.update({ where: { id: item.productId }, data: { stockQuantity: { increment: item.quantity } } });
+        await applyStockChange(tx, { productId: item.productId, delta: item.quantity, reason: 'ORDER_RELEASED', orderId: order.id });
       }
     }
   });

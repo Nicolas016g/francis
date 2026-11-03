@@ -1,6 +1,7 @@
 import FeaturedProduct from './FeaturedProduct';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { getProductCover } from '@/lib/product-images';
 
 export default async function FeaturedProductsGrid() {
   const products = await prisma.product.findMany({
@@ -31,7 +32,7 @@ export default async function FeaturedProductsGrid() {
               name={product.name}
               description={product.description}
               price={Number(product.price)}
-              image={product.imageUrl ?? '/logo_principal.png'}
+              image={getProductCover(product.slug, product.imageUrl) ?? '/logo_principal.png'}
               badge={product.tag ?? undefined}
               rating={5}
               inStock={product.stockQuantity > 0}

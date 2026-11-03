@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProductCategory } from '@/generated/prisma/client';
-import { prisma } from '@/lib/prisma';
+import { findActiveProducts } from '@/lib/products';
 
 const categories = new Set(Object.values(ProductCategory));
 
@@ -38,21 +38,13 @@ export async function GET(request: NextRequest) {
   if (categoryParam && !categories.has(categoryParam as ProductCategory)) {
     return NextResponse.json({ error: 'Categoria inválida.' }, { status: 400 });
   }
+  if (search && search.length > 100) {
+    return NextResponse.json({ error: 'A busca deve ter no máximo 100 caracteres.' }, { status: 400 });
+  }
 
-  const products = await prisma.product.findMany({
-    where: {
-      active: true,
-      ...(categoryParam ? { category: categoryParam as ProductCategory } : {}),
-      ...(search
-        ? {
-            OR: [
-              { name: { contains: search } },
-              { description: { contains: search } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: { createdAt: 'asc' },
+  const products = await findActiveProducts({
+    category: categoryParam as ProductCategory | undefined,
+    search,
   });
 
   return NextResponse.json({ products: products.map(serializeProduct) });

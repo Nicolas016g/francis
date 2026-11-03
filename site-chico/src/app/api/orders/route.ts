@@ -4,6 +4,7 @@ import { PaymentMethod } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getSessionUserId, SESSION_COOKIE } from '@/lib/auth';
 import { verifyShippingQuote } from '@/lib/shipping-quote';
+import { applyStockChange } from '@/lib/stock';
 import { config } from '@/lib';
 
 type OrderBody = {
@@ -111,12 +112,7 @@ export async function POST(request: NextRequest) {
     const subtotal = normalizedItems.reduce((sum, item) => sum + Number(productMap.get(item.slug)!.price) * item.quantity, 0);
     const total = subtotal + shippingCost;
     const order = await prisma.$transaction(async (tx) => {
-      for (const item of normalizedItems) {
-        const product = productMap.get(item.slug)!;
-        const updated = await tx.product.updateMany({ where: { id: product.id, stockQuantity: { gte: item.quantity } }, data: { stockQuantity: { decrement: item.quantity } } });
-        if (updated.count !== 1) throw new Error('STOCK_CONFLICT');
-      }
-      return tx.order.create({
+      const created = await tx.order.create({
         data: {
           checkoutKey, userId, status: 'PENDING', paymentMethod: paymentMethod as PaymentMethod,
           subtotal, shippingCost, total, shippingService: shippingQuote.service, deliveryDays: shippingQuote.deliveryDays,
@@ -128,6 +124,16 @@ export async function POST(request: NextRequest) {
         },
         include: { items: true, payment: true },
       });
+      for (const item of normalizedItems) {
+        const balance = await applyStockChange(tx, {
+          productId: productMap.get(item.slug)!.id,
+          delta: -item.quantity,
+          reason: 'ORDER_RESERVED',
+          orderId: created.id,
+        });
+        if (balance === null) throw new Error('STOCK_CONFLICT');
+      }
+      return created;
     });
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {

@@ -1,5 +1,13 @@
 node_modules
-# Keep environment variables out of version control
+.next
+.DS_Store
+
+# Credenciais e dados: nunca versionar
 .env
+.env.*
+!.env.example
+*.sql.bak
+*dump*.sql
+*backup*.sql
 
 /generated/prisma

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OrderStatus, PaymentStatus } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { hasValidMaintenanceSecret } from '@/lib/maintenance-auth';
+import { applyStockChange } from '@/lib/stock';
 
 const DEFAULT_EXPIRATION_MINUTES = 30;
 const MAX_EXPIRATION_MINUTES = 24 * 60;
@@ -62,9 +63,12 @@ export async function POST(request: NextRequest) {
           select: { productId: true, quantity: true },
         });
         for (const item of items) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stockQuantity: { increment: item.quantity } },
+          await applyStockChange(tx, {
+            productId: item.productId,
+            delta: item.quantity,
+            reason: 'ORDER_RELEASED',
+            orderId: candidate.id,
+            note: 'Pedido expirado sem pagamento',
           });
         }
         return true;

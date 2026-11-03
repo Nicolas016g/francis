@@ -6,6 +6,7 @@ import ProductGallery from "@/components/Product/ProductGallery";
 import AddToCartSection from "./AddToCartSection";
 import ReviewForm from "./ReviewForm";
 import { prisma } from '@/lib/prisma';
+import { getProductImages } from '@/lib/product-images';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,10 @@ export default async function Produto({
   const product = await getProduct(slug);
   if (!product) notFound();
   const rating = product.reviews.length ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length : 0;
-  const categoryLabel = product.category === 'PIMENTA' ? 'Pimentas' : 'Molhos';
+  const categoryLabel =
+    product.category === 'PIMENTA' ? 'Pimentas' : product.category === 'KIT' ? 'Kits' : 'Molhos';
+  const categoryPath =
+    product.category === 'PIMENTA' ? 'pimentas' : product.category === 'KIT' ? 'kits' : 'molhos';
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
@@ -47,7 +51,7 @@ export default async function Produto({
       <div className="flex items-center gap-2 text-sm text-pitch/50 mb-8">
         <Link href="/" className="hover:text-brand transition-colors">Home</Link>
         <span>/</span>
-        <Link href={`/${product.category === 'PIMENTA' ? 'pimentas' : 'molhos'}`} className="hover:text-brand transition-colors">{categoryLabel}</Link>
+        <Link href={`/${categoryPath}`} className="hover:text-brand transition-colors">{categoryLabel}</Link>
         <span>/</span>
         <span className="text-pitch">{product.name}</span>
       </div>
@@ -55,7 +59,7 @@ export default async function Produto({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
         {/* Galeria de Imagens */}
         <div>
-          <ProductGallery productName={product.name} imageUrl={product.imageUrl} />
+          <ProductGallery productName={product.name} imageUrl={product.imageUrl} images={getProductImages(product.slug, product.imageUrl)} />
         </div>
 
         {/* Info */}

@@ -3,6 +3,7 @@ import { ProductCard } from "@/components/Product";
 import FeaturedProductsGrid from '@/components/Product/FeaturedProductsGrid';
 import { ArrowRight, Flame, Star, Truck } from "lucide-react";
 import { prisma } from '@/lib/prisma';
+import { getProductCover } from '@/lib/product-images';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +63,7 @@ export default async function Home() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {featured.map((p) => (
-              <ProductCard key={p.slug} name={p.name} price={`R$ ${p.price.toString().replace('.', ',')}`} rating={5} slug={p.slug} tag={p.tag ?? undefined} imageUrl={p.imageUrl} inStock={p.stockQuantity > 0} />
+              <ProductCard key={p.slug} name={p.name} price={`R$ ${p.price.toString().replace('.', ',')}`} rating={5} slug={p.slug} tag={p.tag ?? undefined} imageUrl={getProductCover(p.slug, p.imageUrl)} inStock={p.stockQuantity > 0} />
             ))}
           </div>
         </div>

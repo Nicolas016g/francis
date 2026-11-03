@@ -4,10 +4,15 @@
 
 ## 📋 Documentação
 
-- **[PLANEJAMENTO.md](./PLANEJAMENTO.md)** — Roadmap e tech stack
-- **[ESTRUTURA.md](./ESTRUTURA.md)** — Organização do projeto
-- **[DESENVOLVIMENTO.md](./DESENVOLVIMENTO.md)** — Guia de dev
-- **[TAREFAS.md](./TAREFAS.md)** — Checklist de features
+- **[docs/ANALISE.md](./docs/ANALISE.md)** — Análise de prontidão e checklist de lançamento
+- **[docs/SISTEMA_LOGIN_CADASTRO.md](./docs/SISTEMA_LOGIN_CADASTRO.md)** — Login e cadastro
+
+## 🗂️ Organização do repositório
+
+- `site-chico/` — aplicação Next.js (código, Prisma, assets públicos)
+- `docs/` — documentação
+- `scripts/` — utilitários (`start_remoto.bat`, `remove_background.py`)
+- `assets/logos/` — logos originais
 
 ## 🚀 Quick Start
 
@@ -21,16 +26,39 @@ npm install
 ### 2. Configurar ambiente
 
 ```bash
-cp .env.example .env.local
-# Editar e adicionar credenciais
+cp .env.example .env
+# Preencha as variáveis (banco MySQL 8, Mercado Pago, Melhor Envio, Resend, segredos)
 ```
 
-### 3. Rodar locally
+### 3. Banco de dados
+
+```bash
+npx prisma migrate deploy   # aplica as migrations em um MySQL vazio
+npx prisma generate
+```
+
+O repositório **não** contém dados nem credenciais. `prisma/seed-products.sql` traz o catálogo inicial (sem fotos e sem estoque); revise preços e composição antes de usar.
+
+### 4. Rodar localmente
 
 ```bash
 npm run dev
 # Abrir http://localhost:3000
 ```
+
+### 5. Painel administrativo
+
+`/admin` (produtos, estoque, pedidos) exige usuário com `role = ADMIN` e e-mail verificado. Crie a conta no site e promova-a:
+
+```sql
+UPDATE User SET role = 'ADMIN' WHERE email = 'email@do-dono.com';
+```
+
+As fotos dos produtos não estão no repositório: informe o link da imagem em cada produto no painel (ou adicione arquivos em `site-chico/public/` e use o caminho em `imageUrl`).
+
+### Pendências para o lançamento
+
+Veja o checklist completo em [docs/ANALISE.md](./docs/ANALISE.md).
 
 ## 📦 Stack
 
@@ -64,34 +92,18 @@ site-chico/
   - 💳 Cartão de crédito/débito
   - 📲 PIX
   - 💰 Mercado Pago
-- ⏳ Sistema de autenticação (NextAuth)
-- ⏳ Dashboard do cliente
-- ⏳ Admin panel
+- ✅ Autenticação própria (cadastro, login, verificação de e-mail, recuperação de senha)
+- ✅ Área do cliente (`/minha-conta`) com status e rastreio
+- ✅ Frete por Melhor Envio e e-mails via Resend
+- ✅ Painel administrativo (`/admin`) com histórico de estoque
 
 ## 🔧 Variáveis de Ambiente
 
-```env
-# API
-NEXT_PUBLIC_API_URL=http://localhost:3000
-
-# Mercado Pago
-MERCADOPAGO_ACCESS_TOKEN=seu_token
-MERCADOPAGO_PUBLIC_KEY=sua_public_key
-
-# PIX
-PIX_KEY=sua_chave_pix
-
-# Database
-DATABASE_URL=mysql://user:pass@localhost/dbname
-
-# Auth
-NEXTAUTH_SECRET=seu_secret
-NEXTAUTH_URL=http://localhost:3000
-```
+Todas estão documentadas em [`site-chico/.env.example`](./site-chico/.env.example).
 
 ## 🚢 Deploy
 
-Hostinger com suporte a Node.js:
+Deploy em hospedagem com suporte a Node.js (ex.: Hostinger). Configure as variáveis de ambiente no painel da hospedagem:
 
 ```bash
 npm run build

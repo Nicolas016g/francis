@@ -174,9 +174,14 @@ export default function Checkout() {
         return;
       }
 
-      clearCart();
       const url = data.initPoint ?? data.sandboxInitPoint;
-      if (url) window.location.href = url;
+      if (!url) {
+        toast('O Mercado Pago não retornou o link de pagamento. Seu pedido foi preservado; tente novamente.', 'error');
+        return;
+      }
+
+      clearCart();
+      window.location.href = url;
     } catch {
       toast('Erro ao processar pagamento. Tente novamente.', 'error');
     } finally {

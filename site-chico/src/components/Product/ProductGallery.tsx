@@ -7,18 +7,13 @@ import Image from 'next/image';
 interface ProductGalleryProps {
   productName?: string;
   imageUrl?: string | null;
+  images?: string[];
 }
 
-export default function ProductGallery({ productName = 'Produto', imageUrl }: ProductGalleryProps) {
+export default function ProductGallery({ productName = 'Produto', imageUrl, images: providedImages }: ProductGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  // 4 imagens do produto
-  const images = [
-    { id: 1, emoji: '🌶️' },
-    { id: 2, emoji: '🌶️' },
-    { id: 3, emoji: '🌶️' },
-    { id: 4, emoji: '🌶️' },
-  ];
+  const images = providedImages?.length ? providedImages : imageUrl ? [imageUrl] : [];
 
   const handlePrevious = () => {
     setSelectedImageIndex((prev) =>
@@ -41,7 +36,11 @@ export default function ProductGallery({ productName = 'Produto', imageUrl }: Pr
       {/* Imagem Principal */}
       <div className="relative bg-off-white h-96 flex items-center justify-center text-9xl overflow-hidden group">
         <div className="absolute inset-0 flex items-center justify-center">
-          {imageUrl ? <Image src={imageUrl} alt={productName} fill className="object-contain p-8" /> : images[selectedImageIndex].emoji}
+          {images[selectedImageIndex] ? (
+            <Image src={images[selectedImageIndex]} alt={`${productName} - imagem ${selectedImageIndex + 1}`} fill className="object-contain p-8" />
+          ) : (
+            <span aria-hidden="true">🌶️</span>
+          )}
         </div>
 
         {/* Botões de Navegação */}
@@ -74,9 +73,9 @@ export default function ProductGallery({ productName = 'Produto', imageUrl }: Pr
       <div className="flex gap-2 overflow-x-auto pb-2">
             {images.map((image, index) => (
           <button
-            key={image.id}
+            key={image}
             onClick={() => handleThumbnailClick(index)}
-            className={`flex-shrink-0 w-16 h-16 flex items-center justify-center text-2xl border-2 transition-all cursor-pointer ${
+            className={`relative flex-shrink-0 w-16 h-16 flex items-center justify-center text-2xl border-2 transition-all cursor-pointer ${
               index === selectedImageIndex
                 ? 'border-brand bg-off-white'
                 : 'border-transparent bg-off-white hover:border-brand/50'
@@ -84,7 +83,7 @@ export default function ProductGallery({ productName = 'Produto', imageUrl }: Pr
             aria-label={`Imagem ${index + 1}`}
             aria-current={index === selectedImageIndex}
           >
-            {imageUrl ? <Image src={imageUrl} alt="" fill className="object-contain p-2" /> : image.emoji}
+            <Image src={image} alt="" fill className="object-contain p-2" />
           </button>
         ))}
       </div>

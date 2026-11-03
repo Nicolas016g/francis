@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSessionUserId, SESSION_COOKIE } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ORDER_STATUS_LABELS } from '@/lib/labels';
 import ProfileForm from './ProfileForm';
 
 export const metadata: Metadata = {
@@ -77,11 +78,12 @@ export default async function MinhaConta() {
                         <p className="font-semibold text-pitch">Pedido #{order.id.slice(-8).toUpperCase()}</p>
                         <p className="text-xs text-pitch/50">{order.createdAt.toLocaleDateString('pt-BR')}</p>
                       </div>
-                      <span className="text-xs font-semibold uppercase text-brand">{order.status}</span>
+                      <span className="text-xs font-semibold uppercase text-brand">{ORDER_STATUS_LABELS[order.status]}</span>
                     </div>
                     <ul className="text-sm text-pitch/70 space-y-1">
                       {order.items.map((item) => <li key={item.id}>{item.quantity}x {item.product.name}</li>)}
                     </ul>
+                    {order.shippingReference && <p className="text-sm text-pitch/70 mt-2">Código de rastreio: <strong>{order.shippingReference}</strong></p>}
                     <p className="text-sm font-bold text-pitch mt-3">Total: R$ {order.total.toString().replace('.', ',')}</p>
                   </article>
                 ))}

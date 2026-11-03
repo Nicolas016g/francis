@@ -36,7 +36,9 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      router.push('/');
+      const requested = new URLSearchParams(window.location.search).get('redirect') ?? '';
+      const isInternalPath = requested.startsWith('/') && !requested.startsWith('//') && !requested.includes('\\');
+      router.push(isInternalPath ? requested : '/');
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Não foi possível entrar.');
     } finally {

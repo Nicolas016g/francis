@@ -17,6 +17,7 @@ datasource db {
 enum ProductCategory {
   PIMENTA
   MOLHO
+  KIT
 }
 
 enum OrderStatus {
@@ -25,6 +26,20 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum StockMovementReason {
+  ENTRY
+  OUTPUT
+  LOSS
+  CORRECTION
+  ORDER_RESERVED
+  ORDER_RELEASED
 }
 
 enum PaymentMethod {
@@ -40,17 +55,18 @@ enum PaymentStatus {
 }
 
 model User {
-  id                  String               @id @default(cuid())
-  name                String
-  email               String               @unique
-  passwordHash        String
-  phone               String?
-  emailVerifiedAt     DateTime?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  orders              Order[]
-  reviews             Review[]
-  passwordResetTokens PasswordResetToken[]
+  id                      String                   @id @default(cuid())
+  name                    String
+  email                   String                   @unique
+  passwordHash            String
+  phone                   String?
+  role                    UserRole                 @default(CUSTOMER)
+  emailVerifiedAt         DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  orders                  Order[]
+  reviews                 Review[]
+  passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
 }
 
@@ -79,29 +95,52 @@ model PasswordResetToken {
 }
 
 model Product {
-  id            String          @id @default(cuid())
-  slug          String          @unique
-  name          String
-  description   String          @db.Text
-  category      ProductCategory
-  price         Decimal         @db.Decimal(10, 2)
-  originalPrice Decimal?        @db.Decimal(10, 2)
-  imageUrl      String?
-  tag           String?
-  heatLevel     Int?
-  sauceType     String?
-  stockQuantity Int             @default(0)
-  active        Boolean         @default(true)
-  weightGrams   Int
-  heightCm      Int
-  widthCm       Int
-  lengthCm      Int
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  orderItems    OrderItem[]
-  reviews       Review[]
+  id             String          @id @default(cuid())
+  slug           String          @unique
+  name           String
+  description    String          @db.Text
+  category       ProductCategory
+  price          Decimal         @db.Decimal(10, 2)
+  originalPrice  Decimal?        @db.Decimal(10, 2)
+  imageUrl       String?
+  tag            String?
+  heatLevel      Int?
+  sauceType      String?
+  stockQuantity  Int             @default(0)
+  active         Boolean         @default(true)
+  weightGrams    Int
+  heightCm       Int
+  widthCm        Int
+  lengthCm       Int
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  orderItems     OrderItem[]
+  reviews        Review[]
+  stockMovements StockMovement[]
 
   @@index([category, active])
+}
+
+model StockMovement {
+  id           String              @id @default(cuid())
+  productId    String
+  reason       StockMovementReason
+  delta        Int
+  balanceAfter Int
+  note         String?
+  orderId      String?
+  createdById  String?
+  createdAt    DateTime            @default(now())
+  product      Product             @relation(fields: [productId], references: [id])
+
+  @@index([productId, createdAt])
+  @@index([createdAt])
+}
+
+model ProductKitItemsArchive {
+  productId  String   @id @db.VarChar(191)
+  kitItems   Json
+  archivedAt DateTime @default(now()) @db.DateTime(3)
 }
 
 model Order {
